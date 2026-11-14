@@ -1,0 +1,22 @@
+# Keep secrets, history, tests and local state out of every image.
+.git
+.github
+.env
+.env.*
+!.env.example
+.venv
+tests
+docs
+scripts
+data
+htmlcov
+.coverage
+.mypy_cache
+.ruff_cache
+.pytest_cache
+**/__pycache__
+**/node_modules
+*.log
+docker-compose.yml
+Dockerfile
+docker

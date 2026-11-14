@@ -1,0 +1,84 @@
+# SPDX-License-Identifier: Apache-2.0
+[project]
+name = "lattice-cop"
+version = "0.1.0"
+description = "Streams live Tampa Bay AIS and ADS-B traffic into a Lattice Sandboxes environment."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.14"
+authors = [{ name = "Brett Waugh" }]
+classifiers = [
+    "Private :: Do Not Upload",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "anduril-lattice-sdk>=5.5.0,<6",
+    "httpx>=0.28,<1",
+    "pydantic>=2.12,<3",
+    "pydantic-settings>=2.11,<3",
+    "websockets>=15,<17",
+]
+
+[project.scripts]
+ais-ingest = "lattice_cop.cli:ais_ingest"
+adsb-ingest = "lattice_cop.cli:adsb_ingest"
+sdr-check = "lattice_cop.cli:sdr_check"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18",
+    "pip-audit>=2.9",
+    "pre-commit>=4.3",
+    "pytest>=8.4",
+    "pytest-asyncio>=1.2",
+    "pytest-cov>=7.0",
+    "respx>=0.22",
+    "ruff>=0.14",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "D", "S", "SIM", "PT", "RUF", "ASYNC", "DTZ", "T20", "PL"]
+ignore = [
+    "D203",  # conflicts with D211 (no blank line before class docstring)
+    "D213",  # conflicts with D212 (summary on the first docstring line)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "D", "PLR2004"]
+"scripts/**" = ["T20"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["src"]
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--strict-markers --strict-config -ra"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["lattice_cop"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = false
+exclude_also = ['if __name__ == "__main__":']

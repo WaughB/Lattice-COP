@@ -1,0 +1,10 @@
+Lattice-COP
+Copyright 2026 Brett Waugh
+
+This product is an independent personal project. It is not affiliated with,
+endorsed by, or sponsored by Anduril Industries. Anduril and Lattice are
+trademarks of Anduril Industries, Inc.
+
+The Apache-2.0 license in LICENSE covers only the original code in this
+repository. It does not relicense the Lattice SDK, the Entity Visualizer
+sample app, readsb, tar1090, or any data. See THIRD_PARTY_NOTICES.md.
