@@ -1,0 +1,6 @@
+# HIGH or CRITICAL findings with no fix available. Every entry needs the CVE ID,
+# a reason, a review date, and the owner's approval (see docs/DECISIONS.md).
+#
+# Format:
+#   # <reason> | review by <YYYY-MM-DD> | approved by <owner> on <YYYY-MM-DD>
+#   CVE-YYYY-NNNNN
