@@ -117,3 +117,27 @@ def test_smoke_test_logs_api_errors_without_secrets(
     assert record["status_code"] == 401
     assert FAKE_ENV_TOKEN not in out
     assert FAKE_SANDBOX_TOKEN not in out
+
+
+@pytest.mark.usefixtures("token_env", "restore_logging")
+@respx.mock
+def test_smoke_test_reports_an_unreachable_environment_without_a_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
+    respx.put(ENTITIES_URL).mock(side_effect=httpx.ConnectError("Connection reset by peer"))
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.smoke_test()
+
+    assert excinfo.value.code == cli.EXIT_FAILED
+    captured = capsys.readouterr()
+    record = json.loads(captured.out.strip().splitlines()[-1])
+    assert record["message"] == "smoke test could not reach Lattice"
+    assert record["error"] == "ConnectError"
+    assert record["host"] == FAKE_HOST
+    assert "Traceback" not in captured.out + captured.err
+    assert FAKE_ENV_TOKEN not in captured.out
+    assert FAKE_SANDBOX_TOKEN not in captured.out

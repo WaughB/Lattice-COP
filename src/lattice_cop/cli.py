@@ -10,6 +10,7 @@ import logging
 import sys
 from typing import NoReturn
 
+import httpx
 from anduril.core.api_error import ApiError
 
 from lattice_cop import __version__, smoke
@@ -73,6 +74,18 @@ def smoke_test() -> NoReturn:
                 "entity_id": smoke.SMOKE_ENTITY_ID,
                 "status_code": error.status_code,
                 "body": error.body,
+            },
+        )
+        raise SystemExit(EXIT_FAILED) from None
+    except httpx.TransportError as error:
+        # The request never got an answer: DNS, TLS, timeout or a dropped connection.
+        log.error(
+            "smoke test could not reach Lattice",
+            extra={
+                "entity_id": smoke.SMOKE_ENTITY_ID,
+                "host": settings.lattice_url,
+                "error": type(error).__name__,
+                "detail": str(error),
             },
         )
         raise SystemExit(EXIT_FAILED) from None
