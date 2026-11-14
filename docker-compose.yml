@@ -30,5 +30,25 @@ services:
     <<: *ingest
     command: ["adsb-ingest"]
 
-  # visualizer (127.0.0.1:5173) is added in Phase 1.
+  # Anduril's Entity Visualizer sample app, unmodified. Its dev server forwards
+  # the browser's entity stream to Lattice. The credentials below end up in the
+  # page the browser loads, so this port must stay on 127.0.0.1.
+  visualizer:
+    build:
+      context: docker/visualizer
+    image: lattice-cop-visualizer:local
+    environment:
+      VITE_LATTICE_URL: ${LATTICE_URL:?Set LATTICE_URL in .env to your environment hostname, without https://}
+      VITE_LATTICE_SANDBOX_TOKEN: ${LATTICE_SANDBOXES_TOKEN:-}
+      VITE_LATTICE_BEARER_TOKEN: ${LATTICE_ENVIRONMENT_TOKEN:-}
+      VITE_LATTICE_CLIENT_ID: ${LATTICE_CLIENT_ID:-}
+      VITE_LATTICE_CLIENT_SECRET: ${LATTICE_CLIENT_SECRET:-}
+    ports:
+      - "127.0.0.1:5173:5173"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
   # readsb (profile: sdr, 127.0.0.1:8080) is added in Phase 3.
