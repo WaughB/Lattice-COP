@@ -17,7 +17,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 
 | Phase | What | State |
 | --- | --- | --- |
-| 0 | Repo, CI and container scaffold | In progress |
+| 0 | Repo, CI and container scaffold | Gate passed; USB passthrough test waiting on hardware |
 | 1 | Lattice and visualizer smoke test | Not started |
 | 2 | AISStream connection | Not started |
 | 3 | RTL-SDR and signal gate | Not started |

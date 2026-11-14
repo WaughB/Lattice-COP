@@ -17,16 +17,19 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 ## Phases
 
 ### Phase 0: Repo and CI scaffold
-- [ ] `.gitattributes`, `.gitignore`, `.dockerignore`, `.env.example`
-- [ ] `pyproject.toml` (uv, Python 3.14), lock file, placeholder package and test
-- [ ] Confirm `anduril-lattice-sdk` and all dependencies install and import on 3.14
-- [ ] pre-commit hooks, Dependabot, CI workflow (lint, types, test, secrets,
+- [x] `.gitattributes`, `.gitignore`, `.dockerignore`, `.env.example`
+- [x] `pyproject.toml` (uv, Python 3.14), lock file, placeholder package and test
+- [x] Confirm `anduril-lattice-sdk` and all dependencies install and import on 3.14
+- [x] pre-commit hooks, Dependabot, CI workflow (lint, types, test, secrets,
       deps, images, docs, compliance, release)
-- [ ] Compliance pytest module (disclaimer, SDK files, image pushes, fixtures)
-- [ ] `Dockerfile` (multi-stage, `python:3.14-slim` by digest, non-root) and a
+- [x] Compliance pytest module (disclaimer, SDK files, image pushes, fixtures)
+- [x] `Dockerfile` (multi-stage, `python:3.14-slim` by digest, non-root) and a
       Compose skeleton with the `sdr` profile
-- [ ] USB container test to choose Docker Path A or B (needs the dongle attached)
-- [ ] **Gate:** CI green on the placeholder package; image builds; CVE scan passes
+- [ ] USB container test to choose Docker Path A or B. Blocked on the owner:
+      install usbipd-win, plug in the dongle, run `scripts/windows/attach-sdr.ps1`,
+      then `scripts/wsl/preflight.sh`. First try (2026-11-14): no dongle visible in WSL2.
+- [x] **Gate:** CI green on the placeholder package; image builds; CVE scan passes
+      (run 43634056851, commit `2c57318`, 2026-11-14)
 
 ### Phase 1: Lattice and visualizer smoke test
 - [ ] `config.py` (pydantic-settings, `SecretStr`), Lattice client setup per the
@@ -45,7 +48,7 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 ### Phase 3: RTL-SDR and signal gate
 - [ ] `readsb` service (profile `sdr`), tar1090 on 127.0.0.1:8080
 - [ ] `sdr-check` command and pass/fail report
-- [ ] `attach-sdr.ps1`, `detach-sdr.ps1`, `preflight.sh`
+- [x] `attach-sdr.ps1`, `detach-sdr.ps1`, `preflight.sh` (written early, for the Phase 0 USB test)
 - [ ] **Gate:** report passes and owner sees aircraft in tar1090
 
 ### Phase 4: Data cleaning
