@@ -74,3 +74,23 @@ requirements doc and current vendor docs disagree (vendor docs win).
   We log only the status code and body.
 - **Publish route.** SDK 5.5.0 publishes with `PUT /api/v1/entities`. Tests
   mock that route with respx.
+- **Visualizer approved.** The owner approved cloning the Entity Visualizer
+  at pinned commit `439255e` at build time and running it unmodified
+  (2026-11-14). `docker/visualizer/Dockerfile` fetches it with BuildKit's git
+  `ADD`, so no upstream code is ever in this repository.
+- **Visualizer runs `vite` directly.** Upstream's `npm run dev` script is just
+  `vite`. The image starts the same binary with `--host 0.0.0.0 --port 5173`
+  so Compose can publish it on 127.0.0.1, and removes npm, npx, corepack and
+  yarn from the runtime stage (not needed at run time; they carry CVEs).
+- **Visualizer credentials are passed at run time.** Vite's dev server reads
+  `VITE_*` from the container environment, so Compose maps them from the
+  `LATTICE_*` values in `.env`. Nothing secret is baked into the image.
+- **Compose requires `LATTICE_URL`.** With an empty hostname the upstream
+  dev server crash-loops on a bad proxy URL. Compose now stops with a clear
+  message instead. CI sets a placeholder hostname.
+- **Loopback-only check.** The compliance tests fail if any Compose service
+  publishes a port on anything but 127.0.0.1, or uses host networking.
+- **Smoke test and unreachable environments.** The first live run
+  (2026-11-14) found the owner's previous Sandboxes environment resetting TLS
+  connections, and the command printed a traceback. It now logs one JSON error
+  line for transport failures. The live gate waits for a new environment.

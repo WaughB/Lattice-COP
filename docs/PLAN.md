@@ -36,9 +36,12 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       REST AIS sample, sandbox header; `scripts/check-env.py`
 - [x] `smoke-test` command: one synthetic vessel (MMSI 999000001), 5-minute expiry
       (unit-tested against mocked HTTP; not yet run against a real environment)
-- [ ] `visualizer` service: upstream app cloned at a pinned commit, bound to 127.0.0.1
-      (waiting on the owner's reading of the app's licence; see DECISIONS.md)
-- [ ] Check `http://127.0.0.1:5173` opens from a Windows browser
+- [x] `visualizer` service: upstream app cloned at a pinned commit, bound to 127.0.0.1
+      (owner approved 2026-11-14; serves the page; image scan clean)
+- [x] Check `http://127.0.0.1:5173` opens from Windows (HTTP 200 from Windows
+      PowerShell and from Ubuntu; refused on the WSL2 network address)
+- [ ] Live smoke test. First try (2026-11-14): the previous Sandboxes
+      environment reset the connection. Waiting on a new environment in `.env`.
 - [ ] **Gate:** vessel appears at the right spot, then expires; owner confirms
 
 ### Phase 2: AISStream connection

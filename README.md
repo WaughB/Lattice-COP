@@ -18,7 +18,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | Phase | What | State |
 | --- | --- | --- |
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough test waiting on hardware |
-| 1 | Lattice and visualizer smoke test | Settings, client and `smoke-test` command written; visualizer and live run pending |
+| 1 | Lattice and visualizer smoke test | Built; waiting on a live run against a Sandboxes environment |
 | 2 | AISStream connection | Not started |
 | 3 | RTL-SDR and signal gate | Not started |
 | 4 | Data cleaning | Not started |
@@ -89,6 +89,20 @@ flowchart TD
   I --> H
   H -- ok --> J["Shown on map until expiry"]
 ```
+
+## Quick check (Phase 1)
+
+With `LATTICE_URL` (hostname only, no `https://`), `LATTICE_SANDBOXES_TOKEN` and one set of Lattice credentials in `.env`:
+
+```bash
+# Ubuntu (WSL2): start the map, then publish one synthetic vessel for five minutes
+docker compose up -d --build visualizer
+docker compose run --rm ais-ingest smoke-test
+```
+
+Open <http://127.0.0.1:5173> in a Windows browser. A vessel named `LATTICE-COP SMOKE TEST` should appear in the middle of Tampa Bay and disappear five minutes later.
+
+The visualizer puts your Lattice credentials in the page it serves. It is bound to `127.0.0.1` and must stay there.
 
 ## Development
 
