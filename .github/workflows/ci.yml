@@ -201,6 +201,8 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run pytest tests/compliance -v
+      - name: .env.example covers every setting the code reads
+        run: uv run scripts/check-env.py --settings
 
   release:
     name: Release
