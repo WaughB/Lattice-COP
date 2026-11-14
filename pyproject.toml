@@ -34,6 +34,7 @@ dev = [
     "pytest>=8.4",
     "pytest-asyncio>=1.2",
     "pytest-cov>=7.0",
+    "pyyaml>=6.0.3",
     "respx>=0.22",
     "ruff>=0.14",
 ]

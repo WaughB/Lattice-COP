@@ -127,3 +127,39 @@ def fixture_file_problems(path: Path) -> list[str]:
             continue
         problems.extend(f"{path.name}:{index}: {p}" for p in fixture_value_problems(document))
     return problems
+
+
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "[::1]", "::1"})
+
+
+def _port_host(port: object) -> str | None:
+    """Return the host address a Compose port entry binds to, or None if it has none."""
+    if isinstance(port, dict):
+        host = port.get("host_ip")
+        return str(host) if host else None
+    text = str(port)
+    if text.startswith("["):
+        return text.split("]", 1)[0] + "]"
+    parts = text.split(":")
+    # "host_ip:host_port:container_port" is the only short form that names an address.
+    return parts[0] if len(parts) >= 3 else None
+
+
+def compose_exposure_problems(compose: object) -> list[str]:
+    """Flag Compose services reachable beyond this machine.
+
+    Every published port must name a loopback address. Host networking is
+    refused outright, because it publishes every port a container opens.
+    """
+    problems: list[str] = []
+    services = compose.get("services", {}) if isinstance(compose, dict) else {}
+    for name, service in services.items():
+        if not isinstance(service, dict):
+            continue
+        if service.get("network_mode") == "host":
+            problems.append(f"{name}: uses host networking")
+        for port in service.get("ports") or []:
+            host = _port_host(port)
+            if host not in _LOOPBACK_HOSTS:
+                problems.append(f"{name}: port {port!r} is not bound to 127.0.0.1")
+    return problems

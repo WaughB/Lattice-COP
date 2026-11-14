@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.compliance import checks
 
@@ -68,6 +69,12 @@ def test_fixtures_are_synthetic() -> None:
     files = sorted(path for path in FIXTURES.rglob("*") if path.is_file())
     problems = [problem for path in files for problem in checks.fixture_file_problems(path)]
     assert problems == []
+
+
+def test_compose_publishes_ports_on_loopback_only() -> None:
+    compose = yaml.safe_load((REPO_ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
+    assert compose["services"], "expected Compose services to check"
+    assert checks.compose_exposure_problems(compose) == []
 
 
 # --- The checks themselves -------------------------------------------------
@@ -166,3 +173,36 @@ def test_fixture_file_check_rejects_unparseable_and_unknown_files(tmp_path: Path
     assert checks.fixture_file_problems(broken)
     assert checks.fixture_file_problems(capture)
     assert checks.fixture_file_problems(readme) == []
+
+
+@pytest.mark.parametrize(
+    "service",
+    [
+        {"ports": ["127.0.0.1:5173:5173"]},
+        {"ports": ["127.0.0.1:8080:80/tcp", "[::1]:8080:80"]},
+        {"ports": [{"target": 5173, "published": 5173, "host_ip": "127.0.0.1"}]},
+        {"command": ["ais-ingest"]},
+    ],
+)
+def test_exposure_check_allows_loopback_and_unpublished_services(service: object) -> None:
+    assert checks.compose_exposure_problems({"services": {"svc": service}}) == []
+
+
+@pytest.mark.parametrize(
+    "service",
+    [
+        {"ports": ["5173:5173"]},
+        {"ports": ["5173"]},
+        {"ports": ["0.0.0.0:5173:5173"]},
+        {"ports": ["192.168.1.10:5173:5173"]},
+        {"ports": [{"target": 5173, "published": 5173}]},
+        {"network_mode": "host"},
+    ],
+)
+def test_exposure_check_flags_anything_wider(service: object) -> None:
+    assert checks.compose_exposure_problems({"services": {"svc": service}})
+
+
+def test_exposure_check_ignores_malformed_documents() -> None:
+    assert checks.compose_exposure_problems(None) == []
+    assert checks.compose_exposure_problems({"services": {"svc": None}}) == []

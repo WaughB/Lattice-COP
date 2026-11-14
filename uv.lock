@@ -458,6 +458,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
+    { name = "pyyaml" },
     { name = "respx" },
     { name = "ruff" },
 ]
@@ -479,6 +480,7 @@ dev = [
     { name = "pytest", specifier = ">=8.4" },
     { name = "pytest-asyncio", specifier = ">=1.2" },
     { name = "pytest-cov", specifier = ">=7.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "respx", specifier = ">=0.22" },
     { name = "ruff", specifier = ">=0.14" },
 ]
