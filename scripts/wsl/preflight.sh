@@ -81,6 +81,12 @@ if [[ ! -f "${env_file}" ]]; then
 else
   pass ".env exists"
   require_env LATTICE_URL LATTICE_SANDBOXES_TOKEN AISSTREAM_API_KEY
+  case "$(env_value LATTICE_URL)" in
+    http://* | https://* | */*)
+      fail "LATTICE_URL must be the hostname only" \
+        "Remove https:// and any path. The visualizer adds the scheme itself."
+      ;;
+  esac
   if [[ -n "$(env_value LATTICE_ENVIRONMENT_TOKEN)" ]]; then
     pass "LATTICE_ENVIRONMENT_TOKEN is set"
   elif [[ -n "$(env_value LATTICE_CLIENT_ID)" && -n "$(env_value LATTICE_CLIENT_SECRET)" ]]; then

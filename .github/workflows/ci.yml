@@ -40,6 +40,11 @@ jobs:
         with:
           dockerfile: Dockerfile
           failure-threshold: style
+      - name: hadolint (visualizer)
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: docker/visualizer/Dockerfile
+          failure-threshold: style
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
         with:
@@ -140,6 +145,8 @@ jobs:
       - name: Compose file is valid
         run: |
           cp .env.example .env
+          # Compose refuses to run without an environment hostname. This one is a placeholder.
+          sed -i 's/^LATTICE_URL=$/LATTICE_URL=lattice-ci.invalid/' .env
           docker compose --profile sdr config --quiet
       - name: Build images (local only, never published)
         run: docker compose --profile sdr build
@@ -147,6 +154,14 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: lattice-cop:local
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+      - name: Scan the visualizer image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: lattice-cop-visualizer:local
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
