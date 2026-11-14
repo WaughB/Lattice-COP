@@ -18,7 +18,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | Phase | What | State |
 | --- | --- | --- |
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough test waiting on hardware |
-| 1 | Lattice and visualizer smoke test | Not started |
+| 1 | Lattice and visualizer smoke test | Settings, client and `smoke-test` command written; visualizer and live run pending |
 | 2 | AISStream connection | Not started |
 | 3 | RTL-SDR and signal gate | Not started |
 | 4 | Data cleaning | Not started |
@@ -106,6 +106,11 @@ uv run ruff check .
 uv run ruff format --check .
 uv run mypy
 uv run pytest --cov
+```
+
+```bash
+# Ubuntu (WSL2): compare your .env with .env.example (prints key names only)
+uv run scripts/check-env.py
 ```
 
 ```bash

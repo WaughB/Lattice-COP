@@ -32,10 +32,12 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       (run 43634056851, commit `2c57318`, 2026-11-14)
 
 ### Phase 1: Lattice and visualizer smoke test
-- [ ] `config.py` (pydantic-settings, `SecretStr`), Lattice client setup per the
-      REST AIS sample, sandbox header
-- [ ] `smoke-test` command: one synthetic vessel (MMSI 999000001), 5-minute expiry
+- [x] `config.py` (pydantic-settings, `SecretStr`), Lattice client setup per the
+      REST AIS sample, sandbox header; `scripts/check-env.py`
+- [x] `smoke-test` command: one synthetic vessel (MMSI 999000001), 5-minute expiry
+      (unit-tested against mocked HTTP; not yet run against a real environment)
 - [ ] `visualizer` service: upstream app cloned at a pinned commit, bound to 127.0.0.1
+      (waiting on the owner's reading of the app's licence; see DECISIONS.md)
 - [ ] Check `http://127.0.0.1:5173` opens from a Windows browser
 - [ ] **Gate:** vessel appears at the right spot, then expires; owner confirms
 

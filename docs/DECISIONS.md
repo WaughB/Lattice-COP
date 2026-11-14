@@ -58,3 +58,19 @@ requirements doc and current vendor docs disagree (vendor docs win).
   path, so an exemption would only weaken the check.
 - **Placeholder license.** Apache-2.0, copyright 2026 Brett Waugh, pending the
   owner's final choice (stop-and-ask).
+- **`ADSBX_MONTHLY_QUOTA` added.** The requirements ask for the poll interval
+  to be validated against the plan's monthly quota, but list no variable for
+  the quota. It is required only when `ADSB_SOURCE=adsbx`.
+- **Per-service required settings.** One `Settings` model serves every
+  command. Lattice settings are always required. `AISSTREAM_API_KEY` and the
+  receiver location are checked by the commands that need them, so the smoke
+  test and `adsb-ingest` do not demand an AISStream key.
+- **Empty values mean "unset".** Compose passes `KEY=` lines through as empty
+  strings, so settings ignore empty values and fall back to defaults.
+- **SDK retries.** The SDK retries 408, 409, 429 and 5xx itself (two retries
+  by default). The Phase 5 publisher will set `max_retries=0` and do its own
+  backoff, because the requirements say never to retry other 4xx errors.
+- **API error logging.** `ApiError`'s string form includes response headers.
+  We log only the status code and body.
+- **Publish route.** SDK 5.5.0 publishes with `PUT /api/v1/entities`. Tests
+  mock that route with respx.
