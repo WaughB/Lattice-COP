@@ -8,6 +8,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # The project targets Python 3.14. Digest updates still come through.
+      - dependency-name: python
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
   - package-ecosystem: docker-compose
     directory: /
     schedule:
