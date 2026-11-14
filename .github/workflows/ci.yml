@@ -1,0 +1,223 @@
+# SPDX-License-Identifier: Apache-2.0
+# One workflow, every job is a gate. Images are built only to be scanned.
+# Nothing here may publish a container image: the images contain the Lattice SDK.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.13.8"
+  FORCE_COLOR: "1"
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run ruff check --output-format=github .
+      - run: uv run ruff format --check .
+      - name: hadolint
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: style
+      - name: actionlint
+        uses: docker://rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        with:
+          args: -color
+
+  types:
+    name: Types
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run mypy
+
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: pytest (fails below 90% branch coverage)
+        run: uv run pytest --cov --cov-report=term-missing
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo
+            uv run coverage report --format=markdown || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  secrets:
+    name: Secrets
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks (full history)
+        run: |
+          docker run --rm \
+            --volume "${PWD}:/repo:ro" \
+            --env GIT_CONFIG_COUNT=1 \
+            --env GIT_CONFIG_KEY_0=safe.directory \
+            --env GIT_CONFIG_VALUE_0=/repo \
+            ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git --redact --no-banner --verbose /repo
+
+  deps:
+    name: Python deps
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Export the lock file
+        run: >
+          uv export --frozen --no-emit-project --format requirements-txt
+          --output-file "${RUNNER_TEMP}/requirements.txt"
+      - name: pip-audit
+        run: |
+          uv run pip-audit --requirement "${RUNNER_TEMP}/requirements.txt" \
+            --require-hashes --disable-pip \
+            --format json --output "${RUNNER_TEMP}/audit.json" || true
+          jq -r '
+            .dependencies[] | select((.vulns | length) > 0)
+            | .name as $n | .version as $v | .vulns[]
+            | "\($n) \($v): \(.id) fix=\(.fix_versions | join(","))"
+          ' "${RUNNER_TEMP}/audit.json" | tee -a "$GITHUB_STEP_SUMMARY"
+          fixable="$(jq '[.dependencies[].vulns[]? | select((.fix_versions | length) > 0)] | length' "${RUNNER_TEMP}/audit.json")"
+          echo "Vulnerabilities with a fix available: ${fixable}"
+          test "${fixable}" -eq 0
+
+  images:
+    name: Images
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compose file is valid
+        run: |
+          cp .env.example .env
+          docker compose --profile sdr config --quiet
+      - name: Build images (local only, never published)
+        run: docker compose --profile sdr build
+      - name: Scan the ingest image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: lattice-cop:local
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          trivyignores: .trivyignore
+      - name: Scan Dockerfiles and Compose config
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          trivyignores: .trivyignore
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Render README Mermaid diagrams
+        run: |
+          mkdir -p "${RUNNER_TEMP}/mermaid"
+          printf '{"args":["--no-sandbox"]}' > "${RUNNER_TEMP}/puppeteer.json"
+          npx --yes @mermaid-js/mermaid-cli@12.2.0 \
+            --input README.md \
+            --output "${RUNNER_TEMP}/mermaid/README.md" \
+            --puppeteerConfigFile "${RUNNER_TEMP}/puppeteer.json"
+          rendered="$(find "${RUNNER_TEMP}/mermaid" -name '*.svg' | wc -l)"
+          expected="$(grep -c '^```mermaid' README.md)"
+          echo "Rendered ${rendered} of ${expected} diagrams"
+          test "${rendered}" -eq "${expected}"
+      - name: Check links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: --no-progress --config lychee.toml README.md THIRD_PARTY_NOTICES.md docs
+          fail: true
+
+  compliance:
+    name: Compliance
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run pytest tests/compliance -v
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lint, types, test, secrets, deps, images, docs, compliance]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          scripts/release-notes.sh "${TAG}" > "${RUNNER_TEMP}/notes.md"
+          gh release create "${TAG}" --title "${TAG}" --notes-file "${RUNNER_TEMP}/notes.md"
