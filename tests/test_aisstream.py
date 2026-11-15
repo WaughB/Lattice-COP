@@ -17,8 +17,8 @@ from pydantic import SecretStr
 from websockets.asyncio.server import ServerConnection, serve
 from websockets.exceptions import ConnectionClosedError
 
-from lattice_cop.sources import aisstream as stream
 from lattice_cop.geo import BoundingBox
+from lattice_cop.sources import aisstream as stream
 
 FAKE_KEY = SecretStr("fake-aisstream-key")
 AOI = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)

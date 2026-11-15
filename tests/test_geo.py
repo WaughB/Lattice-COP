@@ -3,8 +3,8 @@
 
 import pytest
 
-from lattice_cop.geo import BoundingBox
 from lattice_cop.config import load_settings
+from lattice_cop.geo import BoundingBox
 
 TAMPA_BAY = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
 

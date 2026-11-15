@@ -17,11 +17,11 @@ from anduril.core.api_error import ApiError
 from pydantic import SecretStr
 
 from lattice_cop import __version__, smoke
-from lattice_cop.sources import aisstream
-from lattice_cop.geo import BoundingBox
 from lattice_cop.config import ConfigError, load_settings
+from lattice_cop.geo import BoundingBox
 from lattice_cop.lattice.client import build_client
 from lattice_cop.logs import configure_logging
+from lattice_cop.sources import aisstream
 
 EXIT_OK = 0
 EXIT_FAILED = 1
