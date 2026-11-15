@@ -19,7 +19,7 @@ x-ingest: &ingest
     - ALL
   security_opt:
     - no-new-privileges:true
-  restart: "no"
+  restart: unless-stopped
 
 services:
   ais-ingest:
