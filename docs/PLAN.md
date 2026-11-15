@@ -25,9 +25,10 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 - [x] Compliance pytest module (disclaimer, SDK files, image pushes, fixtures)
 - [x] `Dockerfile` (multi-stage, `python:3.14-slim` by digest, non-root) and a
       Compose skeleton with the `sdr` profile
-- [ ] USB container test to choose Docker Path A or B. Blocked on the owner:
-      install usbipd-win, plug in the dongle, run `scripts/windows/attach-sdr.ps1`,
-      then `scripts/wsl/preflight.sh`. First try (2026-11-14): no dongle visible in WSL2.
+- [x] USB container test to choose Docker Path A or B (2026-11-15): after the
+      owner ran `attach-sdr.ps1`, the dongle (0bda:2838) is visible in Ubuntu and
+      inside a container started with `--device /dev/bus/usb`. Path A (Docker
+      Desktop) stays.
 - [x] **Gate:** CI green on the placeholder package; image builds; CVE scan passes
       (run 43634056851, commit `2c57318`, 2026-11-14)
 
@@ -43,8 +44,9 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 - [x] Live smoke test (2026-11-15, new Sandboxes environment, client ID and
       secret): the vessel was published and read back from Lattice as live,
       at the right position, with a five-minute expiry.
-- [ ] **Gate:** vessel appears at the right spot, then expires; owner confirms
-      with a screenshot. Owner approved starting Phase 2 meanwhile (2026-11-15).
+- [x] **Gate:** vessel appears at the right spot, then expires (2026-11-15):
+      the owner's screenshot shows `LATTICE-COP SMOKE TEST` mid-bay in the
+      visualizer; after expiry Lattice answers 404 for the entity.
 
 ### Phase 2: AISStream connection
 - [x] WebSocket client, subscription within 3 s, single connection

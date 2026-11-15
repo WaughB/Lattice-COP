@@ -132,3 +132,11 @@ requirements doc and current vendor docs disagree (vendor docs win).
   fake connections.
 - **websockets 17.** The dependency range is now `>=15,<18` and the lock file
   pins 17.4 (Dependabot's pull request 2), tested against the new client.
+- **Docker Path A confirmed (2026-11-15).** With the dongle attached through
+  usbipd-win, `scripts/wsl/preflight.sh` sees USB ID 0bda:2838 both in Ubuntu
+  and inside a container on Docker Desktop. No switch to Docker Engine (Path
+  B) is needed.
+- **Phase 1 gate passed (2026-11-15).** The owner's screenshot shows the
+  smoke test vessel in the middle of Tampa Bay. The screenshot is not in the
+  repository; screenshots go to `docs/img/` only in Phase 6, after approval.
+  Expiry was confirmed through the API: the entity returns 404 once expired.
