@@ -51,4 +51,40 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
-  # readsb (profile: sdr, 127.0.0.1:8080) is added in Phase 3.
+  # readsb + tar1090 from the upstream ultrafeeder image, unmodified (GPL-3.0).
+  # Starts only with `--profile sdr`. It decodes the RTL-SDR and serves the
+  # tar1090 map and aircraft.json. It feeds no aggregator: no ULTRAFEEDER_CONFIG
+  # or MLAT settings are given. History, heatmap and graphs are off, and every
+  # writable data path is a RAM disk, so no live data is stored.
+  readsb:
+    profiles:
+      - sdr
+    image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder@sha256:ed8a1395ad666d792d23e5306e468d12e91ff7b5a2c435fe8ff1868bbb7e3be5
+    environment:
+      TZ: UTC
+      READSB_DEVICE_TYPE: rtlsdr
+      # readsb's built-in automatic gain.
+      READSB_GAIN: auto
+      READSB_LAT: ${RECEIVER_LAT:-}
+      READSB_LON: ${RECEIVER_LON:-}
+      READSB_ALT: ${RECEIVER_ALT_M:-0}m
+      # 0 keeps the antenna location out of the JSON that tar1090 serves.
+      READSB_RX_LOCATION_ACCURACY: "0"
+      UPDATE_TAR1090: "false"
+      GRAPHS1090_DISABLE: "true"
+      READSB_ENABLE_HEATMAP: "false"
+      READSB_ENABLE_TRACES: "false"
+    device_cgroup_rules:
+      - "c 189:* rwm"
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+    tmpfs:
+      - /run:exec,size=256M
+      - /var/log:size=32M
+      - /var/globe_history:size=64M
+      - /var/lib/collectd:size=32M
+    ports:
+      - "127.0.0.1:8080:80"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
