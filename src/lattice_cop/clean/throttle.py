@@ -46,12 +46,12 @@ class Throttle:
         self._last[key] = (now, fingerprint)
         return True
 
-    def prune(self, now: float, older_than_seconds: float) -> int:
-        """Forget tracks not published for ``older_than_seconds``. Returns how many."""
+    def prune(self, now: float, older_than_seconds: float) -> list[str]:
+        """Forget tracks not published for ``older_than_seconds``. Returns their keys."""
         stale = [key for key, (at, _) in self._last.items() if now - at > older_than_seconds]
         for key in stale:
             del self._last[key]
-        return len(stale)
+        return stale
 
     def __len__(self) -> int:
         """Return how many tracks are remembered."""

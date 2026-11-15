@@ -77,6 +77,6 @@ def test_throttle_prune_forgets_quiet_tracks() -> None:
     throttle.allow("ffff01", 0.0)
     throttle.allow("ffff02", 50.0)
 
-    assert throttle.prune(now=70.0, older_than_seconds=60.0) == 1
+    assert throttle.prune(now=70.0, older_than_seconds=60.0) == ["ffff01"]
     assert len(throttle) == 1
     assert throttle.allow("ffff01", 70.0) is True
