@@ -16,7 +16,7 @@ from pydantic import SecretStr
 
 import lattice_cop
 from lattice_cop import cli
-from lattice_cop.area import BoundingBox
+from lattice_cop.geo import BoundingBox
 from tests.conftest import FAKE_ENV_TOKEN, FAKE_HOST, FAKE_SANDBOX_TOKEN
 
 ENTITIES_URL = f"https://{FAKE_HOST}/api/v1/entities"
@@ -99,7 +99,7 @@ def test_ais_ingest_runs_the_stream_until_sigterm(
         os.kill(os.getpid(), signal.SIGTERM)
         await asyncio.wait_for(stop.wait(), timeout=5)
 
-    monkeypatch.setattr(cli.stream, "run_until_stopped", fake_run)
+    monkeypatch.setattr(cli.aisstream, "run_until_stopped", fake_run)
 
     with pytest.raises(SystemExit) as excinfo:
         cli.ais_ingest()

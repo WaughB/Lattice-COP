@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""The area of interest: a latitude/longitude box."""
+"""Geography helpers: the area-of-interest box and distances."""
 
 from dataclasses import dataclass
 

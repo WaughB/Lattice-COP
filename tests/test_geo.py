@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""The area-of-interest box."""
+"""Geography helpers."""
 
 import pytest
 
-from lattice_cop.area import BoundingBox
+from lattice_cop.geo import BoundingBox
 from lattice_cop.config import load_settings
 
 TAMPA_BAY = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)

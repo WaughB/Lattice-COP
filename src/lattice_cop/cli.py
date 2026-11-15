@@ -17,8 +17,8 @@ from anduril.core.api_error import ApiError
 from pydantic import SecretStr
 
 from lattice_cop import __version__, smoke
-from lattice_cop.ais import stream
-from lattice_cop.area import BoundingBox
+from lattice_cop.sources import aisstream
+from lattice_cop.geo import BoundingBox
 from lattice_cop.config import ConfigError, load_settings
 from lattice_cop.lattice.client import build_client
 from lattice_cop.logs import configure_logging
@@ -50,7 +50,7 @@ async def _run_ais(api_key: SecretStr, aoi: BoundingBox) -> None:
     loop = asyncio.get_running_loop()
     for signum in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(signum, stop.set)
-    await stream.run_until_stopped(api_key, aoi, stop)
+    await aisstream.run_until_stopped(api_key, aoi, stop)
 
 
 def ais_ingest() -> NoReturn:

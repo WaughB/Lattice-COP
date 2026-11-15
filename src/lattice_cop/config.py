@@ -11,7 +11,7 @@ from typing import Literal, Self
 from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from lattice_cop.area import BoundingBox
+from lattice_cop.geo import BoundingBox
 
 SECONDS_PER_30_DAYS = 2_592_000
 """Length of the month used for the ADS-B Exchange quota check (30 days)."""
