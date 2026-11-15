@@ -11,6 +11,8 @@ from typing import Literal, Self
 from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from lattice_cop.area import BoundingBox
+
 SECONDS_PER_30_DAYS = 2_592_000
 """Length of the month used for the ADS-B Exchange quota check (30 days)."""
 
@@ -135,6 +137,13 @@ class Settings(BaseSettings):
             )
             raise ValueError(msg)
         return self
+
+    @property
+    def aoi(self) -> BoundingBox:
+        """The area of interest as a box."""
+        return BoundingBox(
+            south=self.aoi_south, west=self.aoi_west, north=self.aoi_north, east=self.aoi_east
+        )
 
     def require_aisstream_api_key(self) -> SecretStr:
         """Return the AISStream key, or raise ``ConfigError`` naming the variable."""
