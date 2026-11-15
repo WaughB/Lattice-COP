@@ -37,3 +37,32 @@ def distance_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 FEET_TO_METERS = 0.3048
+KNOTS_TO_MPS = 0.514444
+FEET_PER_MINUTE_TO_MPS = 0.00508
+
+
+def velocity_enu(
+    speed_kn: float, course_deg: float, vertical_rate_fpm: float | None = None
+) -> tuple[float, float, float]:
+    """Return velocity as ``(east, north, up)`` in metres per second.
+
+    Args:
+        speed_kn: Speed over ground in knots.
+        course_deg: Direction of travel, degrees clockwise from true north.
+        vertical_rate_fpm: Climb rate in feet per minute; ``None`` means level.
+    """
+    speed = speed_kn * KNOTS_TO_MPS
+    course = math.radians(course_deg)
+    up = 0.0 if vertical_rate_fpm is None else vertical_rate_fpm * FEET_PER_MINUTE_TO_MPS
+    return speed * math.sin(course), speed * math.cos(course), up
+
+
+def heading_quaternion(heading_deg: float) -> tuple[float, float, float, float]:
+    """Return a compass heading as an east-north-up quaternion ``(x, y, z, w)``.
+
+    Compass headings run clockwise from north. The east-north-up frame measures
+    yaw anticlockwise from east, so ``yaw = 90 - heading``: a ship heading north
+    points up the map.
+    """
+    yaw = math.radians(90.0 - heading_deg)
+    return 0.0, 0.0, math.sin(yaw / 2), math.cos(yaw / 2)
