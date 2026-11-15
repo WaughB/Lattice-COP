@@ -22,7 +22,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 2 | AISStream connection | Gate passed |
 | 3 | RTL-SDR and signal gate | Gate passed |
 | 4 | Data cleaning | Gate passed |
-| 5 | Lattice conversion and publishing | Not started |
+| 5 | Lattice conversion and publishing | Built and running; 30-minute run done, gate waiting on the owner |
 | 6 | Visual verification | Not started |
 | 7 | Docs and hardening | Not started |
 
@@ -162,6 +162,27 @@ The receiver container sends nothing to any flight-tracking network and keeps no
 - Put it as high as you can and next to a window, with a view of the sky.
 - Keep it away from the PC, monitors and USB 3 devices; a USB extension lead helps.
 - Try more than one spot and compare `sdr-check` results. A few feet can change the range a lot.
+
+## Run everything (Phase 5)
+
+```bash
+# Ubuntu (WSL2), from the repo folder: receiver, both ingest services and the map
+docker compose --profile sdr up -d --build
+```
+
+Open <http://127.0.0.1:5173> for the Lattice map and <http://127.0.0.1:8080> for the receiver's own map. Ships stay on the Lattice map for 10 minutes after their last report and aircraft for 60 seconds.
+
+```bash
+# Ubuntu (WSL2): each service logs its counters once a minute
+docker compose logs -f ais-ingest adsb-ingest
+```
+
+```bash
+# Ubuntu (WSL2): stop everything. Tracks already in Lattice expire by themselves.
+docker compose --profile sdr down
+```
+
+Without the RTL-SDR, leave out `--profile sdr`: ships still appear, and `adsb-ingest` waits for a receiver.
 
 ## Development
 

@@ -235,3 +235,36 @@ requirements doc and current vendor docs disagree (vendor docs win).
   unless its aircraft database is enabled (`TAR1090_ENABLE_AC_DB`, which
   downloads a database at start). It is off, so aircraft are named by
   callsign or hex. To be revisited in Phase 6.
+- **Async SDK client.** The ingest services use the SDK's `AsyncLattice`, so
+  publishing never blocks the WebSocket or the poll loop. The SDK's own
+  retries are off (`max_retries=0`); the publisher retries 408, 429, 5xx and
+  network failures itself, up to four tries with 0.5 s to 8 s backoff.
+- **Newest-wins queue.** Updates wait in a queue keyed by entity ID. If a
+  newer report for the same track arrives before the older one is sent, only
+  the newer one goes out, so a slow Lattice never builds a backlog.
+- **Parallel publishes.** `PUBLISH_CONCURRENCY` defaults to 2. With 8, the
+  Sandboxes environment answered some updates with 403 (empty body) and 412
+  ("Keycloak token validation failed ... context deadline exceeded").
+- **Error logs are rate-limited.** A rejected or abandoned update is logged
+  with its entity ID, status and body (never headers), at most once every
+  30 s per kind of failure. Counters record every one.
+- **Entity details.** `platform_type` is `Surface Vessel` or `Airplane`.
+  Vessels carry their MMSI as an alternate ID (`ALT_ID_TYPE_MMSI_ID`). The
+  SDK has no alternate-ID type for an ICAO address, so aircraft carry none;
+  the hex is in the entity ID. `createdTime` is when this process first
+  published the track, and is forgotten after an hour without updates.
+- **ADS-B Exchange fallback not built.** The receiver passed its signal gate,
+  and the requirements allow the fallback only if it fails. `adsb-ingest`
+  exits with a clear message if `ADSB_SOURCE=adsbx`. The related settings
+  stay, validated but unused.
+- **Unchanged aircraft.json documents are skipped.** If readsb has not
+  written a new file since the last poll, nothing is cleaned or published.
+- **Ingest services restart.** `ais-ingest` and `adsb-ingest` now use
+  `restart: unless-stopped`. Without the `sdr` profile, `adsb-ingest` keeps
+  polling and counts failed polls instead of exiting.
+- **Phase 5 live run (2026-11-15, 18:16 to 18:46 UTC).** AIS: 636 of 636
+  published. ADS-B: 3,992 published, 2 retried, 2 rejected with 403 and an
+  empty body (18:16:59 and 18:21:25). Each affected aircraft was published
+  again two seconds later. The requirements say never to retry 4xx, so these
+  were not retried; whether to treat an empty-bodied 403 from the Sandboxes
+  front end as transient is the owner's call.

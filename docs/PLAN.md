@@ -82,9 +82,17 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       95%; both replays give the expected counts)
 
 ### Phase 5: Lattice conversion and publishing
-- [ ] `geo.py` conversions, `entity.py` mapping, `publisher.py` (throttle, retries)
-- [ ] Both ingest services wired end to end, deterministic entity IDs
-- [ ] **Gate:** 30 minutes with no publish errors beyond retried transients
+- [x] `geo.py` conversions, `entity.py` mapping, `publisher.py` (throttle, retries)
+- [x] Both ingest services wired end to end, deterministic entity IDs
+- [ ] **Gate:** 30 minutes with no publish errors beyond retried transients.
+      Live run 2026-11-15, 18:16 to 18:46 UTC, no restarts, memory under 50 MiB each:
+      - AIS: 636 of 636 updates published, no errors.
+      - ADS-B: 3,992 published, 2 transient failures retried successfully, and
+        2 updates rejected with HTTP 403 (empty body) that were not retried.
+      - Lattice held exactly the aircraft readsb had fresh positions for, and
+        120 live vessels.
+      The two 403s are outside "retried transients", so the owner decides
+      whether the gate passes as it stands.
 
 ### Phase 6: Visual verification
 - [ ] Icons, names, headings, expiry, no duplicates
