@@ -41,7 +41,6 @@ SUBSCRIBE_DEADLINE_SECONDS: Final = 3.0
 OPEN_TIMEOUT_SECONDS: Final = 10.0
 BACKOFF_MIN_SECONDS: Final = 2.0
 BACKOFF_MAX_SECONDS: Final = 60.0
-STATS_INTERVAL_SECONDS: Final = 60.0
 
 _MAX_BACKOFF_DOUBLINGS: Final = 10
 _MAX_ERROR_TEXT: Final = 200
@@ -285,49 +284,3 @@ async def run_stream(  # noqa: PLR0913 - the extra arguments are test seams
             extra={"reason": reason, "retry_in_seconds": round(delay, 1), "attempt": attempt},
         )
         await sleep(delay)
-
-
-async def log_stats(
-    stats: StreamStats,
-    *,
-    interval: float = STATS_INTERVAL_SECONDS,
-    sleep: Sleep = asyncio.sleep,
-) -> None:
-    """Log message counts by type every ``interval`` seconds until cancelled."""
-    while True:
-        await sleep(interval)
-        log.info("AISStream message counts", extra=stats.drain())
-
-
-async def run_until_stopped(  # noqa: PLR0913 - the extra arguments are test seams
-    api_key: SecretStr,
-    aoi: BoundingBox,
-    stop: asyncio.Event,
-    *,
-    on_message: MessageHandler | None = None,
-    connector: Connector = open_connection,
-    url: str = AISSTREAM_URL,
-) -> None:
-    """Run the stream and the 60 s counter log until ``stop`` is set.
-
-    Raises:
-        Exception: Whatever an internal task raised, if one failed unexpectedly.
-    """
-    stats = StreamStats()
-    workers = [
-        asyncio.create_task(
-            run_stream(
-                api_key, aoi, stats=stats, on_message=on_message, connector=connector, url=url
-            ),
-            name="ais-stream",
-        ),
-        asyncio.create_task(log_stats(stats), name="ais-stats"),
-    ]
-    stopper = asyncio.create_task(stop.wait(), name="ais-stop")
-    done, _ = await asyncio.wait({stopper, *workers}, return_when=asyncio.FIRST_COMPLETED)
-    for task in (stopper, *workers):
-        task.cancel()
-    await asyncio.gather(stopper, *workers, return_exceptions=True)
-    log.info("AISStream client stopped", extra=stats.drain())
-    for task in done - {stopper}:
-        task.result()

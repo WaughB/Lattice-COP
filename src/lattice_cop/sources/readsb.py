@@ -124,6 +124,19 @@ def parse_snapshot(payload: object) -> Snapshot:
     return Snapshot(now=now, messages=int(messages), aircraft=aircraft)
 
 
+def _read(response: httpx.Response) -> Snapshot:
+    """Turn an HTTP answer into a snapshot, or raise ``ReadsbError``."""
+    if not response.is_success:
+        msg = f"readsb answered HTTP {response.status_code}"
+        raise ReadsbError(msg)
+    try:
+        payload = response.json()
+    except ValueError:
+        msg = "aircraft.json is not valid JSON"
+        raise ReadsbError(msg) from None
+    return parse_snapshot(payload)
+
+
 def fetch_snapshot(client: httpx.Client, url: str) -> Snapshot:
     """Fetch and parse aircraft.json.
 
@@ -132,15 +145,21 @@ def fetch_snapshot(client: httpx.Client, url: str) -> Snapshot:
     """
     try:
         response = client.get(url, timeout=FETCH_TIMEOUT_SECONDS)
-        response.raise_for_status()
-        payload = response.json()
-    except httpx.HTTPStatusError as error:
-        msg = f"readsb answered HTTP {error.response.status_code}"
-        raise ReadsbError(msg) from None
     except httpx.HTTPError as error:
         msg = f"could not reach readsb ({type(error).__name__})"
         raise ReadsbError(msg) from None
-    except ValueError:
-        msg = "aircraft.json is not valid JSON"
+    return _read(response)
+
+
+async def fetch_snapshot_async(client: httpx.AsyncClient, url: str) -> Snapshot:
+    """Fetch and parse aircraft.json without blocking the event loop.
+
+    Raises:
+        ReadsbError: On any transport error, a non-2xx answer, or a bad document.
+    """
+    try:
+        response = await client.get(url, timeout=FETCH_TIMEOUT_SECONDS)
+    except httpx.HTTPError as error:
+        msg = f"could not reach readsb ({type(error).__name__})"
         raise ReadsbError(msg) from None
-    return parse_snapshot(payload)
+    return _read(response)

@@ -12,11 +12,10 @@ from typing import Any, NoReturn
 import httpx
 import pytest
 import respx
-from pydantic import SecretStr
 
 import lattice_cop
 from lattice_cop import cli, sdrcheck
-from lattice_cop.geo import BoundingBox
+from lattice_cop.config import Settings
 from tests.conftest import FAKE_ENV_TOKEN, FAKE_HOST, FAKE_SANDBOX_TOKEN
 
 ENTITIES_URL = f"https://{FAKE_HOST}/api/v1/entities"
@@ -43,24 +42,16 @@ def test_lattice_sdk_imports() -> None:
     assert Lattice is not None
 
 
-@pytest.mark.parametrize(("command", "name"), [(cli.adsb_ingest, "adsb-ingest")])
-def test_cli_stubs_exit_with_not_implemented(
-    command: Callable[[], NoReturn], name: str, capsys: pytest.CaptureFixture[str]
-) -> None:
-    with pytest.raises(SystemExit) as excinfo:
-        command()
-    assert excinfo.value.code == cli.EXIT_NOT_IMPLEMENTED
-    assert name in capsys.readouterr().err
-
-
-def test_ais_ingest_reports_bad_config_without_a_traceback(
+@pytest.mark.parametrize("command", [cli.ais_ingest, cli.adsb_ingest])
+def test_ingest_commands_report_bad_config_without_a_traceback(
+    command: Callable[[], NoReturn],
     monkeypatch: pytest.MonkeyPatch,
     tmp_path_factory: pytest.TempPathFactory,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
     with pytest.raises(SystemExit) as excinfo:
-        cli.ais_ingest()
+        command()
     assert excinfo.value.code == cli.EXIT_FAILED
     assert "LATTICE_URL" in capsys.readouterr().err
 
@@ -78,36 +69,66 @@ def test_ais_ingest_needs_the_aisstream_key(
     assert "AISSTREAM_API_KEY" in capsys.readouterr().err
 
 
+@pytest.mark.usefixtures("token_env")
+def test_adsb_ingest_refuses_the_unbuilt_adsb_exchange_source(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
+    monkeypatch.setenv("ADSB_SOURCE", "adsbx")
+    monkeypatch.setenv("ADSBX_RAPIDAPI_KEY", "fake-rapidapi-key")
+    monkeypatch.setenv("ADSBX_MONTHLY_QUOTA", "10000")
+    monkeypatch.setenv("ADSBX_POLL_SECONDS", "300")
+    with pytest.raises(SystemExit) as excinfo:
+        cli.adsb_ingest()
+    assert excinfo.value.code == cli.EXIT_FAILED
+    err = capsys.readouterr().err
+    assert "ADSB_SOURCE=adsbx is not supported" in err
+    assert "fake-rapidapi-key" not in err
+
+
+@pytest.mark.parametrize(
+    ("command", "pipeline", "message"),
+    [
+        (cli.ais_ingest, "run_ais", "ais-ingest starting"),
+        (cli.adsb_ingest, "run_adsb", "adsb-ingest starting"),
+    ],
+)
 @pytest.mark.usefixtures("token_env", "restore_logging")
-def test_ais_ingest_runs_the_stream_until_sigterm(
+def test_ingest_commands_run_their_pipeline_until_sigterm(  # noqa: PLR0913, PLR0917 - fixtures
+    command: Callable[[], NoReturn],
+    pipeline: str,
+    message: str,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path_factory: pytest.TempPathFactory,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
     monkeypatch.setenv("AISSTREAM_API_KEY", "fake-aisstream-key")
-    calls: list[tuple[SecretStr, BoundingBox]] = []
+    calls: list[tuple[Settings, Any]] = []
 
-    async def fake_run(api_key: SecretStr, aoi: BoundingBox, stop: asyncio.Event) -> None:
-        calls.append((api_key, aoi))
+    async def fake_pipeline(settings: Settings, entities: Any, stop: asyncio.Event) -> None:
+        calls.append((settings, entities))
         os.kill(os.getpid(), signal.SIGTERM)
         await asyncio.wait_for(stop.wait(), timeout=5)
 
-    monkeypatch.setattr(cli.aisstream, "run_until_stopped", fake_run)
+    monkeypatch.setattr(cli.ingest, pipeline, fake_pipeline)
 
     with pytest.raises(SystemExit) as excinfo:
-        cli.ais_ingest()
+        command()
 
     assert excinfo.value.code == cli.EXIT_OK
     assert len(calls) == 1
-    api_key, aoi = calls[0]
-    assert api_key.get_secret_value() == "fake-aisstream-key"
-    assert aoi == BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
+    settings, entities = calls[0]
+    assert settings.lattice_url == FAKE_HOST
+    assert hasattr(entities, "publish_entity")
     out = capsys.readouterr().out
     record = json.loads(out.strip().splitlines()[0])
-    assert record["message"].startswith("ais-ingest starting")
+    assert record["message"] == message
     assert record["aoi"] == [[27.40, -83.00], [28.20, -82.25]]
-    assert "fake-aisstream-key" not in out
+    for secret in ("fake-aisstream-key", FAKE_ENV_TOKEN, FAKE_SANDBOX_TOKEN):
+        assert secret not in out
 
 
 def test_smoke_test_reports_bad_config_without_a_traceback(

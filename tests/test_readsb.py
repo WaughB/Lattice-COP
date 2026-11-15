@@ -151,3 +151,21 @@ def test_alt_baro_ground_marks_the_aircraft_on_the_ground() -> None:
     assert aircraft.alt_baro_ft is None
     assert aircraft.squawk is None
     assert aircraft.flight is None
+
+
+@respx.mock
+async def test_async_fetch_parses_and_reports_errors_the_same_way() -> None:
+    respx.get(URL).mock(
+        side_effect=[
+            httpx.Response(200, json=document({"hex": "ffff01"})),
+            httpx.Response(500),
+            httpx.ConnectError("refused"),
+        ]
+    )
+    async with httpx.AsyncClient() as client:
+        snapshot = await readsb.fetch_snapshot_async(client, URL)
+        assert [aircraft.hex for aircraft in snapshot.aircraft] == ["ffff01"]
+        with pytest.raises(readsb.ReadsbError, match="readsb answered HTTP 500"):
+            await readsb.fetch_snapshot_async(client, URL)
+        with pytest.raises(readsb.ReadsbError, match="could not reach readsb"):
+            await readsb.fetch_snapshot_async(client, URL)

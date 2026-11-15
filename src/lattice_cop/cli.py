@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command-line entry points: ``ais-ingest``, ``adsb-ingest``, ``sdr-check``, ``smoke-test``.
 
-``adsb-ingest`` is a placeholder until its build phase lands (see docs/PLAN.md).
-It exits with status 2 so a container started too early fails loudly instead of
-looking healthy.
+Every command loads settings first and exits with status 1, naming the variable,
+if one is missing or invalid.
 """
 
 import argparse
@@ -12,74 +11,88 @@ import logging
 import signal
 import sys
 import time
+from collections.abc import Awaitable, Callable
 from typing import NoReturn
 
 import httpx
 from anduril.core.api_error import ApiError
-from pydantic import SecretStr
 
-from lattice_cop import __version__, sdrcheck, smoke
-from lattice_cop.config import ConfigError, load_settings
-from lattice_cop.geo import BoundingBox
-from lattice_cop.lattice.client import build_client
+from lattice_cop import __version__, ingest, sdrcheck, smoke
+from lattice_cop.config import ConfigError, Settings, load_settings
+from lattice_cop.lattice.client import build_async_client, build_client
 from lattice_cop.logs import configure_logging
-from lattice_cop.sources import aisstream, readsb
+from lattice_cop.sources import readsb
 
 EXIT_OK = 0
 EXIT_FAILED = 1
-EXIT_NOT_IMPLEMENTED = 2
 
 log = logging.getLogger("lattice_cop.cli")
 
 
-def _not_implemented(command: str, phase: int) -> NoReturn:
-    """Report that a command is not built yet and exit.
-
-    Args:
-        command: Name of the console script that was run.
-        phase: Build phase in docs/PLAN.md that delivers the command.
-    """
-    sys.stderr.write(
-        f"lattice-cop {__version__}: '{command}' is not implemented yet "
-        f"(arrives in Phase {phase}; see docs/PLAN.md)\n"
-    )
-    raise SystemExit(EXIT_NOT_IMPLEMENTED)
-
-
-async def _run_ais(api_key: SecretStr, aoi: BoundingBox) -> None:
-    """Run the AISStream client until the process gets SIGINT or SIGTERM."""
+async def _run_until_signalled(pipeline: Callable[[asyncio.Event], Awaitable[None]]) -> None:
+    """Run a pipeline until the process gets SIGINT or SIGTERM."""
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for signum in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(signum, stop.set)
-    await aisstream.run_until_stopped(api_key, aoi, stop)
+    await pipeline(stop)
+
+
+def _load_settings_or_exit() -> Settings:
+    """Load settings, or print what is wrong and exit with status 1."""
+    try:
+        return load_settings()
+    except ConfigError as error:
+        sys.stderr.write(f"{error}\n")
+        raise SystemExit(EXIT_FAILED) from None
 
 
 def ais_ingest() -> NoReturn:
-    """Run the AIS pipeline.
-
-    For now it connects to AISStream and logs message counts every 60 s.
-    Cleaning arrives in Phase 4 and publishing to Lattice in Phase 5.
-    """
+    """Run the AIS pipeline: AISStream, cleaning, and publishing to Lattice."""
+    settings = _load_settings_or_exit()
     try:
-        settings = load_settings()
-        api_key = settings.require_aisstream_api_key()
+        settings.require_aisstream_api_key()
     except ConfigError as error:
         sys.stderr.write(f"{error}\n")
         raise SystemExit(EXIT_FAILED) from None
 
     configure_logging(settings.log_level)
     log.info(
-        "ais-ingest starting (connection and counts only; nothing is published yet)",
-        extra={"version": __version__, "aoi": settings.aoi.corners()},
+        "ais-ingest starting",
+        extra={
+            "version": __version__,
+            "aoi": settings.aoi.corners(),
+            "lattice": settings.lattice_url,
+        },
     )
-    asyncio.run(_run_ais(api_key, settings.aoi))
+    entities = build_async_client(settings).entities
+    asyncio.run(_run_until_signalled(lambda stop: ingest.run_ais(settings, entities, stop)))
     raise SystemExit(EXIT_OK)
 
 
 def adsb_ingest() -> NoReturn:
-    """Run the ADS-B pipeline: readsb or ADS-B Exchange to Lattice (Phase 5)."""
-    _not_implemented("adsb-ingest", 5)
+    """Run the ADS-B pipeline: readsb, cleaning, and publishing to Lattice."""
+    settings = _load_settings_or_exit()
+    if settings.adsb_source != "receiver":
+        # The receiver passed its signal gate, so the ADS-B Exchange fallback was never built.
+        sys.stderr.write(
+            "ADSB_SOURCE=adsbx is not supported: the ADS-B Exchange fallback is not built. "
+            "Set ADSB_SOURCE=receiver.\n"
+        )
+        raise SystemExit(EXIT_FAILED)
+
+    configure_logging(settings.log_level)
+    log.info(
+        "adsb-ingest starting",
+        extra={
+            "version": __version__,
+            "aoi": settings.aoi.corners(),
+            "lattice": settings.lattice_url,
+        },
+    )
+    entities = build_async_client(settings).entities
+    asyncio.run(_run_until_signalled(lambda stop: ingest.run_adsb(settings, entities, stop)))
+    raise SystemExit(EXIT_OK)
 
 
 def _log_sdr_progress(check: sdrcheck.SignalCheck, elapsed: float) -> None:
