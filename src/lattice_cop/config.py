@@ -61,6 +61,12 @@ class Settings(BaseSettings):
     adsbx_poll_seconds: float = Field(default=60, gt=0)
     adsbx_monthly_quota: int | None = Field(default=None, gt=0)
 
+    # --- Receiver signal gate (sdr-check) ---
+    sdr_check_minutes: float = Field(default=30, gt=0)
+    sdr_check_min_aircraft: int = Field(default=20, ge=0)
+    sdr_check_max_median_seen_pos: float = Field(default=5, gt=0)
+    sdr_check_min_range_nm: float = Field(default=30, ge=0)
+
     # --- Tuning ---
     ais_expiry_seconds: float = Field(default=600, gt=0)
     adsb_expiry_seconds: float = Field(default=60, gt=0)
