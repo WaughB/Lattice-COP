@@ -73,9 +73,13 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       ADS-B source; no ADS-B Exchange fallback is needed.
 
 ### Phase 4: Data cleaning
-- [ ] AIS rules, ADS-B rules, each a pure function with unit tests
-- [ ] Synthetic replay file with expected keep/drop counts
-- [ ] **Gate:** clean-module coverage of 95% or more; replay counts match
+- [x] `models.py` (one `Track` for both sources), cleaning thresholds in settings
+- [x] AIS rules, ADS-B rules, each a pure function with unit tests
+- [x] Publish throttle (used by the publisher in Phase 5)
+- [x] Synthetic replay files with expected keep/drop counts
+- [x] **Gate:** clean-module coverage of 95% or more; replay counts match
+      (2026-11-15: `clean/` is at 100% branch coverage, and CI now fails below
+      95%; both replays give the expected counts)
 
 ### Phase 5: Lattice conversion and publishing
 - [ ] `geo.py` conversions, `entity.py` mapping, `publisher.py` (throttle, retries)

@@ -192,3 +192,46 @@ requirements doc and current vendor docs disagree (vendor docs win).
   2.6 s, farthest 46 nm, no dropouts or restarts) and the owner confirmed
   aircraft on tar1090. `ADSB_SOURCE` stays `receiver`. The report and the
   owner's screenshot are not in the repository.
+- **AISStream live message shape (checked 2026-11-15).** Live messages use
+  lower-case `MetaData.latitude` / `longitude` (the docs show capitals) and
+  carry `MetaData.time_utc` as `2026-01-01 12:00:00.123456789 +0000 UTC`.
+  The cleaner takes the position from the typed message body, and parses that
+  time format for the staleness rule.
+- **AIS message time.** `time_utc` is when AISStream received the message. If
+  it is missing or unreadable, the arrival time is used instead of dropping
+  the message.
+- **Position-jump slack.** `POSITION_JUMP_SLACK_NM` (default 0.1) is added to
+  the distance a track may cover. Without it, two reports a fraction of a
+  second apart would imply a huge speed from ordinary position noise. A jump
+  never replaces the last kept position, and the rule heals by itself: once
+  enough time has passed, the same position is plausible again.
+- **Rule order.** AIS: invalid position, outside AOI, non-vessel MMSI, stale,
+  duplicate, position jump. ADS-B: no position, stale, outside the AOI box,
+  outside the radius, non-ICAO, position jump. Extra counters cover messages
+  the rules cannot read (`malformed`, `unsupported`, `invalid_static`).
+- **AOI box and radius for ADS-B.** An aircraft must be inside both. With the
+  defaults the whole box lies within the 60 nm radius, so the box decides.
+- **Unknown altitude.** An aircraft with neither geometric nor barometric
+  altitude is kept at the geoid offset with "altitude unknown" in its
+  description. The requirements do not cover this case.
+- **Geoid offset.** The default is now -26.7 m: EGM96 gives -26.65 m at Tampa
+  International (GeographicLib GeoidEval, 2026-11-15). The requirements
+  estimated -28 m and asked for it to be verified.
+- **Static data merge.** A newer static message never blanks a field that an
+  earlier one filled, because class B vessels send the name and the other
+  details in separate parts.
+- **Throttle location.** The throttle is in `clean/throttle.py`; the Phase 5
+  publisher will use it. For AIS, a change of name, description or call sign
+  lets an update through early.
+- **Emergency squawks are logged with the hex address.** The requirements ask
+  for a warning. It is logged once each time an aircraft starts sending 7500,
+  7600 or 7700, not on every poll. This is the one place a log line names an
+  aircraft.
+- **Synthetic MMSIs and the vessel rule.** Fixture MMSIs must be in the 999
+  range, which the vessel rule drops (first digit must be 2 to 7). The replay
+  therefore runs twice: once with `AIS_ALLOW_NON_VESSEL_MMSI` on to exercise
+  every other rule, and once with defaults to show the range is dropped.
+- **Registration and type.** readsb's aircraft.json has no `r` or `t` fields
+  unless its aircraft database is enabled (`TAR1090_ENABLE_AC_DB`, which
+  downloads a database at start). It is off, so aircraft are named by
+  callsign or hex. To be revisited in Phase 6.

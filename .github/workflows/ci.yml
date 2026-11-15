@@ -78,6 +78,8 @@ jobs:
       - run: uv sync --frozen
       - name: pytest (fails below 90% branch coverage)
         run: uv run pytest --cov --cov-report=term-missing
+      - name: Cleaning rules stay at or above 95% coverage
+        run: uv run coverage report --include='*/lattice_cop/clean/*' --fail-under=95
       - name: Coverage summary
         if: always()
         run: |

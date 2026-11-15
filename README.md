@@ -21,7 +21,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 1 | Lattice and visualizer smoke test | Gate passed |
 | 2 | AISStream connection | Gate passed |
 | 3 | RTL-SDR and signal gate | Gate passed |
-| 4 | Data cleaning | Not started |
+| 4 | Data cleaning | Gate passed |
 | 5 | Lattice conversion and publishing | Not started |
 | 6 | Visual verification | Not started |
 | 7 | Docs and hardening | Not started |
