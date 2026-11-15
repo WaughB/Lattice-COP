@@ -67,12 +67,22 @@ class Settings(BaseSettings):
     sdr_check_max_median_seen_pos: float = Field(default=5, gt=0)
     sdr_check_min_range_nm: float = Field(default=30, ge=0)
 
+    # --- Data cleaning ---
+    ais_max_age_seconds: float = Field(default=300, gt=0)
+    ais_max_speed_kn: float = Field(default=50, gt=0)
+    ais_allow_non_vessel_mmsi: bool = False
+    ais_static_cache_seconds: float = Field(default=21600, gt=0)
+    adsb_max_position_age_seconds: float = Field(default=15, gt=0)
+    adsb_max_speed_kn: float = Field(default=1000, gt=0)
+    adsb_allow_non_icao: bool = False
+    position_jump_slack_nm: float = Field(default=0.1, ge=0)
+
     # --- Tuning ---
     ais_expiry_seconds: float = Field(default=600, gt=0)
     adsb_expiry_seconds: float = Field(default=60, gt=0)
     ais_throttle_seconds: float = Field(default=10, ge=0)
     adsb_throttle_seconds: float = Field(default=2, ge=0)
-    geoid_offset_m: float = -28
+    geoid_offset_m: float = -26.7
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     @field_validator("lattice_url")

@@ -34,3 +34,6 @@ def distance_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     half_dlambda = math.radians(lon2 - lon1) / 2
     a = math.sin(half_dphi) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(half_dlambda) ** 2
     return 2 * EARTH_RADIUS_NM * math.asin(min(1.0, math.sqrt(a)))
+
+
+FEET_TO_METERS = 0.3048
