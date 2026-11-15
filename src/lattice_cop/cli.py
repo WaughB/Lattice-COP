@@ -1,19 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0
 """Command-line entry points: ``ais-ingest``, ``adsb-ingest``, ``sdr-check``, ``smoke-test``.
 
-The ingest commands and ``sdr-check`` are placeholders until their build phases
+``adsb-ingest`` and ``sdr-check`` are placeholders until their build phases
 land (see docs/PLAN.md). Each placeholder exits with status 2 so a container
 started too early fails loudly instead of looking healthy.
 """
 
+import asyncio
 import logging
+import signal
 import sys
 from typing import NoReturn
 
 import httpx
 from anduril.core.api_error import ApiError
+from pydantic import SecretStr
 
 from lattice_cop import __version__, smoke
+from lattice_cop.ais import stream
+from lattice_cop.area import BoundingBox
 from lattice_cop.config import ConfigError, load_settings
 from lattice_cop.lattice.client import build_client
 from lattice_cop.logs import configure_logging
@@ -39,9 +44,35 @@ def _not_implemented(command: str, phase: int) -> NoReturn:
     raise SystemExit(EXIT_NOT_IMPLEMENTED)
 
 
+async def _run_ais(api_key: SecretStr, aoi: BoundingBox) -> None:
+    """Run the AISStream client until the process gets SIGINT or SIGTERM."""
+    stop = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for signum in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(signum, stop.set)
+    await stream.run_until_stopped(api_key, aoi, stop)
+
+
 def ais_ingest() -> NoReturn:
-    """Run the AIS pipeline: AISStream to Lattice (Phase 5)."""
-    _not_implemented("ais-ingest", 5)
+    """Run the AIS pipeline.
+
+    For now it connects to AISStream and logs message counts every 60 s.
+    Cleaning arrives in Phase 4 and publishing to Lattice in Phase 5.
+    """
+    try:
+        settings = load_settings()
+        api_key = settings.require_aisstream_api_key()
+    except ConfigError as error:
+        sys.stderr.write(f"{error}\n")
+        raise SystemExit(EXIT_FAILED) from None
+
+    configure_logging(settings.log_level)
+    log.info(
+        "ais-ingest starting (connection and counts only; nothing is published yet)",
+        extra={"version": __version__, "aoi": settings.aoi.corners()},
+    )
+    asyncio.run(_run_ais(api_key, settings.aoi))
+    raise SystemExit(EXIT_OK)
 
 
 def adsb_ingest() -> NoReturn:
