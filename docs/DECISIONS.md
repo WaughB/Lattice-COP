@@ -94,3 +94,41 @@ requirements doc and current vendor docs disagree (vendor docs win).
   (2026-11-14) found the owner's previous Sandboxes environment resetting TLS
   connections, and the command printed a traceback. It now logs one JSON error
   line for transport failures. The live gate waits for a new environment.
+- **Live smoke test passed (2026-11-15).** Against the owner's new Sandboxes
+  environment the synthetic vessel was published and read back as live. The
+  first try used the value labelled "environment token", which Lattice
+  rejected as "not a valid JWT"; it was a copy of the client secret. The
+  client ID and secret worked.
+- **AISStream message shape (docs checked 2026-11-15).** The current docs
+  show `MetaData.Latitude` / `MetaData.Longitude` with capital letters; older
+  payloads used lower case. The client reads the typed body
+  (`Message.<type>.Latitude` / `Longitude`) first and accepts either case in
+  `MetaData` as a fallback.
+- **AISStream sends binary frames.** Each frame is UTF-8 JSON in a binary
+  WebSocket frame. The client accepts binary and text.
+- **Subscription confirmation and compression.** AISStream answers a valid
+  subscription with `SubscriptionConfirmation` and `CompressionEnabled`. Its
+  docs say uncompressed connections have been bandwidth-limited since
+  September 2026. The client always offers permessage-deflate and logs a
+  warning if the confirmation says compression is off.
+- **No documented AISStream error format.** The docs only say the connection
+  closes (late or malformed subscription, invalid key, connection limit, slow
+  reader). The client treats any close as a reason to reconnect with backoff,
+  and also logs a top-level `error` field if one arrives, with the API key
+  removed. A wrong key therefore shows up as repeated reconnects that never
+  receive data, backing off to one try a minute.
+- **Backoff formula.** The ceiling doubles from 2 s to 60 s; the delay is a
+  random point in the top half of the ceiling, never under 2 s. The attempt
+  counter resets once a subscribed AIS message arrives, not on connect, so a
+  server that accepts and then drops connections is still backed off.
+- **AOI counter in Phase 2.** Position reports are counted as inside or
+  outside the AOI so the gate can be read from the logs. This is a counter
+  only; the real cleaning rules arrive in Phase 4.
+- **Logs carry counts only.** The AIS client never logs MMSIs, names or
+  positions, so container logs do not become a store of live data.
+- **Mock AISStream server in tests.** One test starts a WebSocket server on
+  127.0.0.1 to exercise the real library (handshake, compression, forced
+  disconnect, reconnect). It never leaves loopback; every other test uses
+  fake connections.
+- **websockets 17.** The dependency range is now `>=15,<18` and the lock file
+  pins 17.4 (Dependabot's pull request 2), tested against the new client.

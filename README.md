@@ -18,8 +18,8 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | Phase | What | State |
 | --- | --- | --- |
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough test waiting on hardware |
-| 1 | Lattice and visualizer smoke test | Built; waiting on a live run against a Sandboxes environment |
-| 2 | AISStream connection | Not started |
+| 1 | Lattice and visualizer smoke test | Live smoke test passed; waiting on the owner's visual check |
+| 2 | AISStream connection | Built and tested against a mock server; waiting on a 15-minute live run |
 | 3 | RTL-SDR and signal gate | Not started |
 | 4 | Data cleaning | Not started |
 | 5 | Lattice conversion and publishing | Not started |
@@ -103,6 +103,17 @@ docker compose run --rm ais-ingest smoke-test
 Open <http://127.0.0.1:5173> in a Windows browser. A vessel named `LATTICE-COP SMOKE TEST` should appear in the middle of Tampa Bay and disappear five minutes later.
 
 The visualizer puts your Lattice credentials in the page it serves. It is bound to `127.0.0.1` and must stay there.
+
+## AIS connection check (Phase 2)
+
+With `AISSTREAM_API_KEY` also set in `.env`:
+
+```bash
+# Ubuntu (WSL2): connect to AISStream and log message counts every 60 s. Ctrl+C stops it.
+docker compose run --rm ais-ingest
+```
+
+Each minute it prints one JSON line, `AISStream message counts`, with the number of messages by type and how many position reports were inside the area of interest. Nothing is published to Lattice yet, and no vessel data is logged or stored: the logs carry counts only. If the connection drops, the service reconnects by itself, waiting between 2 and 60 seconds.
 
 ## Development
 

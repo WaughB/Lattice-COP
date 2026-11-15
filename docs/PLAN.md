@@ -40,15 +40,20 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       (owner approved 2026-11-14; serves the page; image scan clean)
 - [x] Check `http://127.0.0.1:5173` opens from Windows (HTTP 200 from Windows
       PowerShell and from Ubuntu; refused on the WSL2 network address)
-- [ ] Live smoke test. First try (2026-11-14): the previous Sandboxes
-      environment reset the connection. Waiting on a new environment in `.env`.
+- [x] Live smoke test (2026-11-15, new Sandboxes environment, client ID and
+      secret): the vessel was published and read back from Lattice as live,
+      at the right position, with a five-minute expiry.
 - [ ] **Gate:** vessel appears at the right spot, then expires; owner confirms
+      with a screenshot. Owner approved starting Phase 2 meanwhile (2026-11-15).
 
 ### Phase 2: AISStream connection
-- [ ] WebSocket client, subscription within 3 s, single connection
-- [ ] Reconnect with exponential backoff and jitter (2 s to 60 s)
-- [ ] 60 s counters by message type; no publishing yet
-- [ ] **Gate:** 15 minutes connected with AOI position reports; forced disconnect recovers
+- [x] WebSocket client, subscription within 3 s, single connection
+- [x] Reconnect with exponential backoff and jitter (2 s to 60 s)
+- [x] 60 s counters by message type; no publishing yet
+- [x] `ais-ingest` runs the client and stops cleanly on SIGINT or SIGTERM
+- [ ] **Gate:** 15 minutes connected with AOI position reports; forced disconnect
+      recovers. Recovery is proven against a mock server in the tests; the live
+      run waits on `AISSTREAM_API_KEY` in `.env`.
 
 ### Phase 3: RTL-SDR and signal gate
 - [ ] `readsb` service (profile `sdr`), tar1090 on 127.0.0.1:8080
