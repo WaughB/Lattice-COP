@@ -7,7 +7,7 @@ import logging
 import os
 import signal
 from collections.abc import Callable, Iterator
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import httpx
 import pytest
@@ -15,7 +15,7 @@ import respx
 from pydantic import SecretStr
 
 import lattice_cop
-from lattice_cop import cli
+from lattice_cop import cli, sdrcheck
 from lattice_cop.geo import BoundingBox
 from tests.conftest import FAKE_ENV_TOKEN, FAKE_HOST, FAKE_SANDBOX_TOKEN
 
@@ -43,13 +43,7 @@ def test_lattice_sdk_imports() -> None:
     assert Lattice is not None
 
 
-@pytest.mark.parametrize(
-    ("command", "name"),
-    [
-        (cli.adsb_ingest, "adsb-ingest"),
-        (cli.sdr_check, "sdr-check"),
-    ],
-)
+@pytest.mark.parametrize(("command", "name"), [(cli.adsb_ingest, "adsb-ingest")])
 def test_cli_stubs_exit_with_not_implemented(
     command: Callable[[], NoReturn], name: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -202,3 +196,160 @@ def test_smoke_test_reports_an_unreachable_environment_without_a_traceback(
     assert "Traceback" not in captured.out + captured.err
     assert FAKE_ENV_TOKEN not in captured.out
     assert FAKE_SANDBOX_TOKEN not in captured.out
+
+
+# --- sdr-check ---
+
+RECEIVER_URL = "http://readsb/data/aircraft.json"
+
+
+class FakeClock:
+    """A clock that only moves when the signal gate sleeps."""
+
+    def __init__(self) -> None:
+        self.now = 500.0
+
+    def __call__(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.now += seconds
+
+
+@pytest.fixture
+def sdr_env(monkeypatch: pytest.MonkeyPatch, tmp_path_factory: pytest.TempPathFactory) -> FakeClock:
+    """Receiver settings with a synthetic antenna location, and a fake clock for the gate."""
+    monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
+    monkeypatch.setenv("RECEIVER_LAT", "27.90")
+    monkeypatch.setenv("RECEIVER_LON", "-82.50")
+    monkeypatch.setenv("SDR_CHECK_MIN_AIRCRAFT", "2")
+    clock = FakeClock()
+    real_run = sdrcheck.run_check
+
+    def fast_run(*args: Any, **kwargs: Any) -> float:
+        return real_run(*args, clock=clock, sleep=clock.sleep, **kwargs)
+
+    monkeypatch.setattr(cli.sdrcheck, "run_check", fast_run)
+    return clock
+
+
+def aircraft_json(
+    clock: FakeClock, *positions: tuple[float, float]
+) -> Callable[[httpx.Request], httpx.Response]:
+    """Answer each request with a synthetic aircraft.json stamped with the fake time."""
+
+    def respond(_request: httpx.Request) -> httpx.Response:
+        aircraft = [
+            {"hex": f"ffff{index:02x}", "lat": lat, "lon": lon, "seen_pos": 0.4}
+            for index, (lat, lon) in enumerate(positions, start=1)
+        ]
+        return httpx.Response(
+            200, json={"now": clock.now, "messages": int(clock.now * 20), "aircraft": aircraft}
+        )
+
+    return respond
+
+
+def test_sdr_check_needs_the_receiver_location(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path_factory: pytest.TempPathFactory,
+    capsys: pytest.CaptureFixture[str],
+    request: pytest.FixtureRequest,
+) -> None:
+    monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check([])
+    assert excinfo.value.code == cli.EXIT_FAILED
+    assert "LATTICE_URL" in capsys.readouterr().err
+
+    request.getfixturevalue("token_env")
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check([])
+    assert excinfo.value.code == cli.EXIT_FAILED
+    assert "RECEIVER_LAT" in capsys.readouterr().err
+
+
+@pytest.mark.usefixtures("token_env", "restore_logging")
+@respx.mock
+def test_sdr_check_passes_and_prints_a_report_without_the_location(
+    sdr_env: FakeClock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    route = respx.get(RECEIVER_URL).mock(
+        side_effect=aircraft_json(sdr_env, (27.75, -82.55), (27.60, -82.70), (28.90, -82.50))
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check(["--minutes", "2"])
+
+    assert excinfo.value.code == cli.EXIT_OK
+    assert route.call_count == 120
+    out = capsys.readouterr().out
+    assert "Result: PASS" in out
+    assert out.count("[PASS]") == 4
+    progress = [json.loads(line) for line in out.splitlines() if line.startswith("{")]
+    assert [record["message"] for record in progress] == [
+        "sdr-check starting",
+        "sdr-check progress",
+    ]
+    assert progress[1]["aircraft_in_aoi"] == 2
+    assert progress[1]["farthest_nm"] == 60
+    assert "27.9" not in out
+    assert "-82.5" not in out
+
+
+@pytest.mark.usefixtures("token_env", "restore_logging")
+@respx.mock
+def test_sdr_check_fails_when_too_few_aircraft_are_seen(
+    sdr_env: FakeClock, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("SDR_CHECK_MINUTES", "0.5")
+    route = respx.get(RECEIVER_URL).mock(side_effect=aircraft_json(sdr_env, (28.90, -82.50)))
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check([])
+
+    assert excinfo.value.code == cli.EXIT_FAILED
+    assert route.call_count == 30
+    out = capsys.readouterr().out
+    assert "[FAIL] Unique aircraft with a position inside the AOI" in out
+    assert out.rstrip().endswith("Result: FAIL")
+
+
+@pytest.mark.usefixtures("token_env", "restore_logging", "sdr_env")
+@respx.mock
+def test_sdr_check_explains_an_unreachable_receiver(capsys: pytest.CaptureFixture[str]) -> None:
+    respx.get(RECEIVER_URL).mock(side_effect=httpx.ConnectError("refused"))
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check(["--minutes", "5"])
+
+    assert excinfo.value.code == cli.EXIT_FAILED
+    captured = capsys.readouterr()
+    assert "could not read aircraft.json from ADSB_RECEIVER_URL" in captured.err
+    assert "docker compose --profile sdr up -d readsb" in captured.err
+    assert "Traceback" not in captured.out + captured.err
+    assert "Result:" not in captured.out
+
+
+@pytest.mark.usefixtures("token_env", "restore_logging", "sdr_env")
+def test_sdr_check_stopped_early_reports_a_failure(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def interrupted(*_args: Any, **_kwargs: Any) -> float:
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(cli.sdrcheck, "run_check", interrupted)
+
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check([])
+
+    assert excinfo.value.code == cli.EXIT_FAILED
+    assert "stopped early" in capsys.readouterr().out
+
+
+@pytest.mark.usefixtures("token_env", "sdr_env")
+def test_sdr_check_rejects_a_zero_duration(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.sdr_check(["--minutes", "0"])
+    assert excinfo.value.code == 2
+    assert "--minutes must be greater than 0" in capsys.readouterr().err
