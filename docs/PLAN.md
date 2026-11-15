@@ -66,7 +66,11 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       live receiver worked; the 30-minute gate needs the receiver location)
 - [x] CI scans the upstream readsb image and reports it without failing the build
 - [x] `attach-sdr.ps1`, `detach-sdr.ps1`, `preflight.sh` (written early, for the Phase 0 USB test)
-- [ ] **Gate:** report passes and owner sees aircraft in tar1090
+- [x] **Gate:** report passes and owner sees aircraft in tar1090 (2026-11-15,
+      17:21 to 17:51 UTC): 53 unique aircraft inside the AOI, median position
+      age 2.6 s, farthest 46 nm, no dropouts or restarts in 1800 polls. The
+      owner confirmed aircraft on the tar1090 map. The receiver stays the
+      ADS-B source; no ADS-B Exchange fallback is needed.
 
 ### Phase 4: Data cleaning
 - [ ] AIS rules, ADS-B rules, each a pure function with unit tests

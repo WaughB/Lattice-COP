@@ -20,7 +20,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough works on Docker Desktop |
 | 1 | Lattice and visualizer smoke test | Gate passed |
 | 2 | AISStream connection | Gate passed |
-| 3 | RTL-SDR and signal gate | Built; readsb decodes aircraft; waiting on the 30-minute signal check |
+| 3 | RTL-SDR and signal gate | Gate passed |
 | 4 | Data cleaning | Not started |
 | 5 | Lattice conversion and publishing | Not started |
 | 6 | Visual verification | Not started |

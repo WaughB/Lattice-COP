@@ -187,3 +187,8 @@ requirements doc and current vendor docs disagree (vendor docs win).
   owner-tunable pass marks, with the requirements' proposed values as defaults.
 - **readsb image scan.** CI scans the pinned upstream image with Trivy and
   writes the result to the job summary. It never fails the build.
+- **Phase 3 gate passed (2026-11-15).** The 30-minute `sdr-check` run at
+  midday passed all four marks (53 aircraft in the AOI, median position age
+  2.6 s, farthest 46 nm, no dropouts or restarts) and the owner confirmed
+  aircraft on tar1090. `ADSB_SOURCE` stays `receiver`. The report and the
+  owner's screenshot are not in the repository.
