@@ -60,8 +60,11 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       ran 16 minutes without a break. SIGTERM stopped it with exit code 0.
 
 ### Phase 3: RTL-SDR and signal gate
-- [ ] `readsb` service (profile `sdr`), tar1090 on 127.0.0.1:8080
-- [ ] `sdr-check` command and pass/fail report
+- [x] `readsb` service (profile `sdr`), tar1090 on 127.0.0.1:8080. Short run
+      (2026-11-15): readsb found the dongle and decoded aircraft on Docker Desktop.
+- [x] `sdr-check` command and pass/fail report (two-minute trial against the
+      live receiver worked; the 30-minute gate needs the receiver location)
+- [x] CI scans the upstream readsb image and reports it without failing the build
 - [x] `attach-sdr.ps1`, `detach-sdr.ps1`, `preflight.sh` (written early, for the Phase 0 USB test)
 - [ ] **Gate:** report passes and owner sees aircraft in tar1090
 

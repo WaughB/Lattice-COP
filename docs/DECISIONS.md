@@ -148,3 +148,42 @@ requirements doc and current vendor docs disagree (vendor docs win).
   2 s to 32 s, and the client re-subscribed 12 s after the network returned.
   AISStream confirmed compression on both connections. Only counts were
   logged; no live data was kept.
+- **Module layout.** The AISStream client moved to `sources/aisstream.py` and
+  the AOI box to `geo.py`, the names the requirements give.
+- **readsb image.** `ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder`, pinned
+  by digest (image built 2026-11-10, readsb 3.16.21), run unmodified. Its
+  licence file is GPL-3.0; readsb is GPL-3.0-or-later and tar1090
+  GPL-2.0-or-later (each checked in its repository on 2026-11-15).
+- **readsb feeds nobody.** No `ULTRAFEEDER_CONFIG` or `MLAT_CONFIG` is set,
+  so the container sends nothing to any aggregator; its log confirms MLAT is
+  disabled and no stats package runs. `UPDATE_TAR1090=false` stops the
+  start-up update download.
+- **readsb stores nothing.** Graphs, heatmap and traces are off, no volume is
+  mounted, and `/run`, `/var/log`, `/var/globe_history` and
+  `/var/lib/collectd` are RAM disks. Everything goes when the container stops.
+- **Automatic gain.** The requirements say "autogain". The image offers
+  `READSB_GAIN=auto` (readsb's built-in, the upstream default and
+  recommendation) and `autogain` (a legacy script that needs 90 minutes
+  without a restart and keeps state on disk). We use `auto`.
+- **Antenna location stays out of readsb's JSON.**
+  `READSB_RX_LOCATION_ACCURACY=0` keeps the location out of the files tar1090
+  serves, so the tar1090 map shows no site marker or range rings and a
+  screenshot cannot give the address away. `sdr-check` gets the location from
+  settings and never prints it.
+- **USB passthrough keys.** Upstream's recommended `device_cgroup_rules:
+  "c 189:* rwm"` plus a `/dev/bus/usb` bind mount, which survives a replug.
+  The container is not privileged. `cap_drop: ALL` and `read_only` are not
+  set: the image runs s6-overlay as root and upstream documents neither.
+- **aircraft.json path.** `http://readsb/data/aircraft.json` inside the
+  Compose network, as `.env.example` assumed; confirmed against the image.
+- **sdr-check measurements.** Addresses starting with `~` (non-ICAO) are
+  ignored. An aircraft counts for the AOI and range checks only while its
+  position is under 15 s old; ranges beyond 300 nm are treated as decoding
+  errors. A readsb restart is a falling `messages` counter. A dropout is a
+  failed fetch, or five polls in a row without a newer file; each outage
+  counts once. A run stopped early always fails.
+- **sdr-check settings.** `SDR_CHECK_MINUTES`, `SDR_CHECK_MIN_AIRCRAFT`,
+  `SDR_CHECK_MAX_MEDIAN_SEEN_POS` and `SDR_CHECK_MIN_RANGE_NM` hold the
+  owner-tunable pass marks, with the requirements' proposed values as defaults.
+- **readsb image scan.** CI scans the pinned upstream image with Trivy and
+  writes the result to the job summary. It never fails the build.

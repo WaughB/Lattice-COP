@@ -20,7 +20,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough works on Docker Desktop |
 | 1 | Lattice and visualizer smoke test | Gate passed |
 | 2 | AISStream connection | Gate passed |
-| 3 | RTL-SDR and signal gate | Not started |
+| 3 | RTL-SDR and signal gate | Built; readsb decodes aircraft; waiting on the 30-minute signal check |
 | 4 | Data cleaning | Not started |
 | 5 | Lattice conversion and publishing | Not started |
 | 6 | Visual verification | Not started |
@@ -114,6 +114,54 @@ docker compose run --rm ais-ingest
 ```
 
 Each minute it prints one JSON line, `AISStream message counts`, with the number of messages by type and how many position reports were inside the area of interest. Nothing is published to Lattice yet, and no vessel data is logged or stored: the logs carry counts only. If the connection drops, the service reconnects by itself, waiting between 2 and 60 seconds.
+
+## Receiver check (Phase 3)
+
+This starts readsb on the RTL-SDR and measures whether reception is good enough. Run it in daytime, when there is more traffic.
+
+1. Share the dongle into WSL2. Leave this window open; it re-attaches the dongle after an unplug.
+
+   ```powershell
+   # Windows PowerShell (run as Administrator), from the repo folder
+   .\scripts\windows\attach-sdr.ps1
+   ```
+
+2. Put your antenna location in `.env`: `RECEIVER_LAT`, `RECEIVER_LON` and `RECEIVER_ALT_M` (metres above sea level). This is your home, so it stays in `.env` and is never committed, logged or printed.
+
+3. Check the setup, then start the receiver.
+
+   ```bash
+   # Ubuntu (WSL2)
+   scripts/wsl/preflight.sh
+   docker compose --profile sdr up -d readsb
+   ```
+
+4. Open <http://127.0.0.1:8080> in a Windows browser. Aircraft should appear on the tar1090 map within a minute or two. The map shows no marker for your antenna; that is deliberate.
+
+5. Run the signal check. It watches for 30 minutes and prints a pass/fail report.
+
+   ```bash
+   # Ubuntu (WSL2)
+   docker compose --profile sdr run --rm adsb-ingest sdr-check
+   ```
+
+   Add `--minutes 5` for a quick look; only a full run counts. The pass marks are the `SDR_CHECK_*` values in `.env`:
+
+   | Check | Default pass mark |
+   | --- | --- |
+   | Unique aircraft with a position inside the area of interest | at least 20 |
+   | Median position age (`seen_pos`) | 5 s or less |
+   | Farthest position from the antenna | at least 30 nm |
+   | USB dropouts and readsb restarts | none |
+
+The receiver container sends nothing to any flight-tracking network and keeps nothing on disk.
+
+### Antenna tips
+
+- Stand the whip antenna vertical.
+- Put it as high as you can and next to a window, with a view of the sky.
+- Keep it away from the PC, monitors and USB 3 devices; a USB extension lead helps.
+- Try more than one spot and compare `sdr-check` results. A few feet can change the range a lot.
 
 ## Development
 

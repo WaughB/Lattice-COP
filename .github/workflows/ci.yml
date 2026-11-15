@@ -166,6 +166,37 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
           trivyignores: .trivyignore
+      - name: Find the upstream readsb image
+        id: readsb
+        run: |
+          image="$(docker compose --profile sdr config --format json | jq -r '.services.readsb.image')"
+          echo "image=${image}" >> "${GITHUB_OUTPUT}"
+      # The readsb image is third-party and used unmodified, so its findings are
+      # reported in the job summary and never fail the build.
+      - name: Scan the upstream readsb image (report only)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.readsb.outputs.image }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+          format: table
+          output: readsb-scan.txt
+      - name: Report the readsb scan
+        if: always()
+        env:
+          READSB_IMAGE: ${{ steps.readsb.outputs.image }}
+        run: |
+          {
+            echo "### Upstream readsb image (report only)"
+            echo
+            echo "\`${READSB_IMAGE}\`"
+            echo
+            echo '```text'
+            if [ -s readsb-scan.txt ]; then cat readsb-scan.txt; else echo "No scan output."; fi
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
       - name: Scan Dockerfiles and Compose config
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
