@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Read aircraft.json from readsb (wiedehopf) over HTTP.
 
-Field names follow readsb's README-json.md. Only the fields the signal gate
-needs are read here; the ADS-B pipeline adds the rest in later phases.
+Field names follow readsb's README-json.md. Values are kept as readsb reports
+them (feet, knots, degrees, feet per minute); cleaning and conversion come later.
 """
 
 from dataclasses import dataclass
@@ -28,6 +28,19 @@ class Aircraft:
     latitude: float | None = None
     longitude: float | None = None
     seen_pos: float | None = None
+    flight: str | None = None
+    registration: str | None = None
+    type_code: str | None = None
+    alt_geom_ft: float | None = None
+    alt_baro_ft: float | None = None
+    on_ground: bool = False
+    """readsb reports ``alt_baro`` as the string ``ground`` for aircraft on the ground."""
+    ground_speed_kn: float | None = None
+    track_deg: float | None = None
+    true_heading_deg: float | None = None
+    geom_rate_fpm: float | None = None
+    baro_rate_fpm: float | None = None
+    squawk: str | None = None
 
     @property
     def is_icao(self) -> bool:
@@ -60,6 +73,11 @@ def _number(value: object) -> float | None:
     return float(value)
 
 
+def _text(value: object) -> str | None:
+    """Return ``value`` if it is a string, else ``None``. Padding is left for cleaning."""
+    return value if isinstance(value, str) else None
+
+
 def parse_snapshot(payload: object) -> Snapshot:
     """Turn a decoded aircraft.json document into a ``Snapshot``.
 
@@ -87,6 +105,18 @@ def parse_snapshot(payload: object) -> Snapshot:
             latitude=_number(entry.get("lat")),
             longitude=_number(entry.get("lon")),
             seen_pos=_number(entry.get("seen_pos")),
+            flight=_text(entry.get("flight")),
+            registration=_text(entry.get("r")),
+            type_code=_text(entry.get("t")),
+            alt_geom_ft=_number(entry.get("alt_geom")),
+            alt_baro_ft=_number(entry.get("alt_baro")),
+            on_ground=entry.get("alt_baro") == "ground",
+            ground_speed_kn=_number(entry.get("gs")),
+            track_deg=_number(entry.get("track")),
+            true_heading_deg=_number(entry.get("true_heading")),
+            geom_rate_fpm=_number(entry.get("geom_rate")),
+            baro_rate_fpm=_number(entry.get("baro_rate")),
+            squawk=_text(entry.get("squawk")),
         )
         for entry in entries
         if isinstance(entry, dict) and isinstance(entry.get("hex"), str) and entry["hex"]

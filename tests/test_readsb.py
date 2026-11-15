@@ -31,7 +31,7 @@ def test_parses_positions_and_ages() -> None:
     assert snapshot.now == 1_800_000_000.0
     assert snapshot.messages == 500
     first, second, third = snapshot.aircraft
-    assert first == readsb.Aircraft("ffff01", 27.9, -82.5, 0.4)
+    assert first == readsb.Aircraft("ffff01", 27.9, -82.5, 0.4, flight="SYN001  ")
     assert first.position == (27.9, -82.5)
     assert first.is_icao is True
     assert second.position is None
@@ -104,3 +104,50 @@ def test_transport_errors_become_readsb_errors(error: Exception) -> None:
         pytest.raises(readsb.ReadsbError, match="could not reach readsb"),
     ):
         readsb.fetch_snapshot(client, URL)
+
+
+def test_parses_the_fields_cleaning_needs() -> None:
+    (aircraft,) = readsb.parse_snapshot(
+        document(
+            {
+                "hex": "ffff01",
+                "flight": "SYN001  ",
+                "r": "SYN-REG1",
+                "t": "B739",
+                "alt_geom": 35250,
+                "alt_baro": 35000,
+                "gs": 462.1,
+                "track": 91.5,
+                "true_heading": 93.2,
+                "geom_rate": -640,
+                "baro_rate": -600,
+                "squawk": "6005",
+            }
+        )
+    ).aircraft
+
+    assert aircraft == readsb.Aircraft(
+        hex="ffff01",
+        flight="SYN001  ",
+        registration="SYN-REG1",
+        type_code="B739",
+        alt_geom_ft=35250.0,
+        alt_baro_ft=35000.0,
+        on_ground=False,
+        ground_speed_kn=462.1,
+        track_deg=91.5,
+        true_heading_deg=93.2,
+        geom_rate_fpm=-640.0,
+        baro_rate_fpm=-600.0,
+        squawk="6005",
+    )
+
+
+def test_alt_baro_ground_marks_the_aircraft_on_the_ground() -> None:
+    (aircraft,) = readsb.parse_snapshot(
+        document({"hex": "ffff01", "alt_baro": "ground", "squawk": 1200, "flight": 7})
+    ).aircraft
+    assert aircraft.on_ground is True
+    assert aircraft.alt_baro_ft is None
+    assert aircraft.squawk is None
+    assert aircraft.flight is None
