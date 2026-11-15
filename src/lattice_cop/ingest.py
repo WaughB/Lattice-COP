@@ -92,6 +92,7 @@ async def run_ais(  # noqa: PLR0913 - the extra arguments are test seams
         entities,
         expiry_seconds=settings.ais_expiry_seconds,
         throttle=Throttle(settings.ais_throttle_seconds),
+        concurrency=settings.publish_concurrency,
     )
 
     def on_message(message: dict[str, Any]) -> None:
@@ -185,6 +186,7 @@ async def run_adsb(  # noqa: PLR0913 - the extra arguments are test seams
         entities,
         expiry_seconds=settings.adsb_expiry_seconds,
         throttle=Throttle(settings.adsb_throttle_seconds),
+        concurrency=settings.publish_concurrency,
     )
     polls: Counter[str] = Counter()
 

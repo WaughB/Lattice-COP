@@ -27,6 +27,7 @@ def test_defaults_match_the_tampa_bay_aoi() -> None:
     assert settings.ais_throttle_seconds == 10
     assert settings.adsb_throttle_seconds == 2
     assert settings.geoid_offset_m == -26.7
+    assert settings.publish_concurrency == 2
     assert settings.log_level == "INFO"
 
 

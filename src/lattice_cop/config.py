@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     ais_throttle_seconds: float = Field(default=10, ge=0)
     adsb_throttle_seconds: float = Field(default=2, ge=0)
     geoid_offset_m: float = -26.7
+    publish_concurrency: int = Field(default=2, ge=1, le=32)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
     @field_validator("lattice_url")
