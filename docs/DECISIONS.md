@@ -140,3 +140,11 @@ requirements doc and current vendor docs disagree (vendor docs win).
   smoke test vessel in the middle of Tampa Bay. The screenshot is not in the
   repository; screenshots go to `docs/img/` only in Phase 6, after approval.
   Expiry was confirmed through the API: the entity returns 404 once expired.
+- **Phase 2 gate passed (2026-11-15).** Live run from 16:01 to 16:24 UTC in
+  the Compose container. All four message types arrived (30 to 45 messages a
+  minute), with no invalid frames, no server errors and no positions outside
+  the AOI. The forced disconnect was `docker network disconnect` for 75 s:
+  the keepalive ping timed out after about 30 s, five retries backed off from
+  2 s to 32 s, and the client re-subscribed 12 s after the network returned.
+  AISStream confirmed compression on both connections. Only counts were
+  logged; no live data was kept.

@@ -19,7 +19,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | --- | --- | --- |
 | 0 | Repo, CI and container scaffold | Gate passed; USB passthrough works on Docker Desktop |
 | 1 | Lattice and visualizer smoke test | Gate passed |
-| 2 | AISStream connection | Built and tested against a mock server; waiting on a 15-minute live run |
+| 2 | AISStream connection | Gate passed |
 | 3 | RTL-SDR and signal gate | Not started |
 | 4 | Data cleaning | Not started |
 | 5 | Lattice conversion and publishing | Not started |

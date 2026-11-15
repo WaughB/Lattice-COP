@@ -53,9 +53,11 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 - [x] Reconnect with exponential backoff and jitter (2 s to 60 s)
 - [x] 60 s counters by message type; no publishing yet
 - [x] `ais-ingest` runs the client and stops cleanly on SIGINT or SIGTERM
-- [ ] **Gate:** 15 minutes connected with AOI position reports; forced disconnect
-      recovers. Recovery is proven against a mock server in the tests; the live
-      run waits on `AISSTREAM_API_KEY` in `.env`.
+- [x] **Gate:** 15 minutes connected with AOI position reports; forced disconnect
+      recovers (live run 2026-11-15, 16:01 to 16:24 UTC): 791 messages, 459
+      position reports, all inside the AOI, every minute. The container's network
+      was cut for 75 s; the client re-subscribed 12 s after it came back and then
+      ran 16 minutes without a break. SIGTERM stopped it with exit code 0.
 
 ### Phase 3: RTL-SDR and signal gate
 - [ ] `readsb` service (profile `sdr`), tar1090 on 127.0.0.1:8080
