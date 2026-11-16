@@ -8,7 +8,9 @@ outcome by reason.
 """
 
 import logging
+import re
 from collections import Counter
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Final, Self
@@ -71,6 +73,9 @@ DB_MILITARY: Final = 1
 DB_PIA: Final = 4
 DB_LADD: Final = 8
 """Bits of readsb's ``dbFlags``. PIA and LADD are the two FAA privacy programmes."""
+
+AIRLINE_CALLSIGN: Final = re.compile(r"([A-Z]{3})[0-9][0-9A-Z]{0,4}")
+"""An airline flight's callsign: the airline's ICAO code, then the flight number."""
 
 LAST_FIX_TTL_SECONDS: Final = 600.0
 """An aircraft's last kept position is forgotten after this long without a new one."""
@@ -193,12 +198,25 @@ def operator_name(aircraft: Aircraft) -> str:
     return clean_text(aircraft.operator)
 
 
+def airline_name(aircraft: Aircraft, airlines: Mapping[str, str]) -> str | None:
+    """Return the airline the callsign belongs to, or ``None``.
+
+    Only a callsign shaped like an airline flight is looked up, and never one
+    that is just the aircraft's registration.
+    """
+    callsign = clean_text(aircraft.flight)
+    match = AIRLINE_CALLSIGN.fullmatch(callsign)
+    if match is None or callsign == clean_text(aircraft.registration).replace("-", ""):
+        return None
+    return airlines.get(match[1])
+
+
 def position_source_note(aircraft: Aircraft) -> str | None:
     """Say how the data arrived when it did not come straight from the aircraft."""
     return POSITION_SOURCES.get(clean_text(aircraft.position_source).partition("_")[0])
 
 
-def describe(aircraft: Aircraft, altitude_note: str | None) -> str:
+def describe(aircraft: Aircraft, altitude_note: str | None, airline: str | None = None) -> str:
     """Build the track description from everything known about the aircraft."""
     registration, operator, year = (
         clean_text(aircraft.registration),
@@ -211,6 +229,7 @@ def describe(aircraft: Aircraft, altitude_note: str | None) -> str:
         type_label(aircraft),
         EMITTER_CATEGORIES.get(clean_text(aircraft.category)),
         "military" if aircraft.db_flags & DB_MILITARY else None,
+        f"airline {airline}" if airline else None,
         f"registration {registration}" if registration else None,
         f"operator {operator}" if operator else None,
         f"built {year}" if year else None,
@@ -239,6 +258,8 @@ class AdsbCleaner:
     def __init__(self, rules: AdsbRules) -> None:
         """Create a cleaner with empty memory."""
         self.rules = rules
+        self.airlines: Mapping[str, str] = {}
+        """Airline names by ICAO code. Empty until the receiver's table is loaded."""
         self.counts: Counter[str] = Counter()
         self._last: dict[str, Fix] = {}
         self._emergencies: dict[str, str] = {}
@@ -311,7 +332,7 @@ class AdsbCleaner:
             vertical_rate_fpm=rate,
             callsign=clean_text(aircraft.flight) or None,
             registration=clean_text(aircraft.registration) or None,
-            description=describe(aircraft, note),
+            description=describe(aircraft, note, airline_name(aircraft, self.airlines)),
             specific_type=clean_text(aircraft.type_name) or clean_text(aircraft.type_code) or None,
             squawk=clean_squawk(aircraft.squawk),
             pressure_altitude_ft=aircraft.alt_baro_ft,

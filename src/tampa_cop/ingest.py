@@ -22,10 +22,13 @@ from tampa_cop.clean.ais import AisCleaner, AisRules
 from tampa_cop.clean.throttle import Throttle
 from tampa_cop.config import Settings
 from tampa_cop.lattice.publisher import EntitiesClient, Publisher
-from tampa_cop.sources import aisstream, readsb
+from tampa_cop.sources import airlines, aisstream, readsb
 
 COUNTS_INTERVAL_SECONDS: Final = 60.0
 ADSB_POLL_SECONDS: Final = 1.0
+AIRLINE_RETRY_SECONDS: Final = 60.0
+AIRLINE_REFRESH_SECONDS: Final = 86_400.0
+"""The table only changes when the receiver image does, so one look a day is plenty."""
 
 FAILED_POLLS: Final = "failed_polls"
 UNCHANGED_POLLS: Final = "unchanged_polls"
@@ -162,6 +165,35 @@ async def _poll_readsb(  # noqa: PLR0913 - one argument per collaborator
         await sleep(max(0.0, start + ticks * ADSB_POLL_SECONDS - monotonic()))
 
 
+async def _keep_airlines(
+    url: str, cleaner: AdsbCleaner, *, client: httpx.AsyncClient, sleep: Sleep
+) -> None:
+    """Give the cleaner the receiver's airline table, retrying until it answers.
+
+    Aircraft are published without airline names in the meantime.
+    """
+    warned = announced = False
+    while True:
+        try:
+            cleaner.airlines = await airlines.fetch_airlines(client, url)
+        except airlines.AirlineTableError as error:
+            if not warned:
+                log.warning(
+                    "airline names are not available; retrying", extra={"reason": str(error)}
+                )
+                warned = True
+            await sleep(AIRLINE_RETRY_SECONDS)
+        else:
+            if not announced:
+                log.info(
+                    "airline names loaded from the receiver",
+                    extra={"airlines": len(cleaner.airlines)},
+                )
+                announced = True
+            warned = False
+            await sleep(AIRLINE_REFRESH_SECONDS)
+
+
 async def run_adsb(  # noqa: PLR0913 - the extra arguments are test seams
     settings: Settings,
     entities: EntitiesClient,
@@ -215,6 +247,7 @@ async def run_adsb(  # noqa: PLR0913 - the extra arguments are test seams
                 sleep=sleep,
                 monotonic=monotonic,
             ),
+            _keep_airlines(settings.adsb_receiver_url, cleaner, client=http, sleep=sleep),
             publisher.run(),
             _log_counts("adsb-ingest", counts, sleep=sleep),
         )

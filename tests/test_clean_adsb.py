@@ -209,6 +209,43 @@ def test_position_source_is_noted_only_when_it_is_not_the_aircraft(
     assert adsb.position_source_note(plane(position_source=source)) == note
 
 
+AIRLINES = {"SYN": "Synthetic Air"}
+
+
+@pytest.mark.parametrize(
+    ("aircraft", "airline"),
+    [
+        (plane(flight="SYN101  "), "Synthetic Air"),
+        (plane(flight="SYN1"), "Synthetic Air"),
+        (plane(flight="SYN12AB", registration="N-SYN1"), "Synthetic Air"),
+        (plane(flight="XXX101"), None),  # a code the table does not know
+        (plane(flight="SYN"), None),  # no flight number
+        (plane(flight="SYNT101"), None),  # four letters
+        (plane(flight="N101SY"), None),  # a registration used as the callsign
+        (plane(flight="syn101"), None),
+        (plane(flight="SYN123456"), None),  # too long for a callsign
+        (plane(flight="SYN101", registration="SYN-101"), None),  # its own registration
+        (plane(), None),
+    ],
+)
+def test_airline_comes_from_the_callsign_prefix(aircraft: Aircraft, airline: str | None) -> None:
+    assert adsb.airline_name(aircraft, AIRLINES) == airline
+
+
+def test_describe_names_the_airline_after_the_type() -> None:
+    aircraft = plane(type_code="B738", category="A3", registration="N-SYN1", squawk="1200")
+    assert adsb.describe(aircraft, None, "Synthetic Air") == (
+        "B738; large aircraft; airline Synthetic Air; registration N-SYN1; squawk 1200"
+    )
+
+
+def test_the_cleaner_adds_the_airline_once_it_has_the_table() -> None:
+    target, aircraft = cleaner(), plane(flight="SYN101")
+    assert "airline" not in (keep(target, aircraft).description or "")
+    target.airlines = AIRLINES
+    assert keep(target, aircraft, NOW + 1).description == "airline Synthetic Air; altitude unknown"
+
+
 def test_rules_come_from_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     for name, value in {
         "LATTICE_URL": "lattice-test.invalid",

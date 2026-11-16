@@ -376,3 +376,29 @@ requirements doc and current vendor docs disagree (vendor docs win).
   under the new entity IDs within a minute.
 - **Phase 7 gate closed.** Every line of the definition of done is met. The
   final project licence remains the owner's open decision.
+- **Owner decisions, 2026-11-16.** Apache-2.0 is the final project licence,
+  which settles the placeholder noted on day one. The project is personal
+  and runs on personal hardware only. The screenshots stay in the README.
+  Rotating the Sandboxes token is left for the owner to do later.
+- **Airline names added, from the receiver's own table.** The owner asked
+  for route and airline lookups "if easy and no cost". tar1090's database
+  inside the readsb image includes `operators.js`, a table of airline names
+  by three-letter ICAO code. `adsb-ingest` reads it from the readsb
+  container at start (and once a day after) and names the airline when a
+  callsign is three letters, a digit, then up to four more letters or
+  digits, and is not simply the aircraft's registration. The name goes in
+  the description, next to the registered operator, which for airliners is
+  often a leasing trust. No outside service is called. If the table cannot
+  be read, aircraft are published without airline names and the fetch is
+  retried every minute.
+- **Route lookups not built.** Two free services were checked.
+  - adsbdb (`api.adsbdb.com`) needs no key, but its README says the route
+    data "may not be copied, published, or incorporated into other
+    databases without the explicit permission of" its author. Putting
+    routes into Lattice entities would do that.
+  - adsb.lol did not answer from this machine on the day, and its API notes
+    say a key will be required, obtained by feeding data to adsb.lol. This
+    project feeds no aggregator.
+  Neither meets "easy and no cost" without a licence question, so no route
+  is published. Asking the adsbdb route data's author for permission is the
+  owner's option.

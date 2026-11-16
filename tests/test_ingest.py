@@ -14,11 +14,15 @@ import pytest
 import respx
 
 from tampa_cop import ingest
+from tampa_cop.clean.adsb import AdsbCleaner, AdsbRules
 from tampa_cop.config import Settings, load_settings
 from tampa_cop.sources import aisstream
 from tests.builders import aircraft_entry, ais_position, ais_ship_static, time_utc
 
 RECEIVER_URL = "http://readsb/data/aircraft.json"
+RECEIVER_ROOT = "http://readsb/"
+AIRLINE_TABLE_URL = "http://readsb/db-9.9.1/operators.js"
+START_PAGE = '<script>databaseFolder = "db-9.9.1";</script>'
 # 200000001 has no assigned country code, so it is not a real vessel, but it
 # passes the vessel-MMSI rule that drops the 999 range.
 VESSEL_MMSI = 200000001
@@ -225,6 +229,7 @@ async def test_adsb_pipeline_polls_cleans_and_publishes(
     route = respx.get(RECEIVER_URL).mock(
         side_effect=readsb_answers(first, {"error": 503}, first, second)
     )
+    respx.get(RECEIVER_ROOT).mock(return_value=httpx.Response(404))
     entities, stop = FakeEntities(expected=2), asyncio.Event()
 
     async def no_wait(_seconds: float) -> None:
@@ -265,6 +270,7 @@ async def test_adsb_pipeline_keeps_polling_when_readsb_is_down_and_logs_counts(
 ) -> None:
     caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
     respx.get(RECEIVER_URL).mock(side_effect=httpx.ConnectError("refused"))
+    respx.get(RECEIVER_ROOT).mock(side_effect=httpx.ConnectError("refused"))
     stop = asyncio.Event()
     waits: list[float] = []
 
@@ -287,6 +293,46 @@ async def test_adsb_pipeline_keeps_polling_when_readsb_is_down_and_logs_counts(
     assert stopped.polls["failed_polls"] == stopped.polls["polls"] >= 2
     assert stopped.publish == {}
     assert stopped.aircraft_tracked == 0
+
+
+class LoaderStoppedError(Exception):
+    """Raised by the fake sleep to end the airline loader's endless loop."""
+
+
+@respx.mock
+async def test_airline_table_is_retried_until_the_receiver_serves_it(
+    settings: Settings, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
+    page = httpx.Response(200, text=START_PAGE)
+    respx.get(RECEIVER_ROOT).mock(
+        side_effect=[httpx.Response(503), httpx.ConnectError("refused"), page, page]
+    )
+    respx.get(AIRLINE_TABLE_URL).mock(
+        return_value=httpx.Response(200, json={"SYN": {"n": "Synthetic Air"}})
+    )
+    cleaner = AdsbCleaner(AdsbRules.from_settings(settings))
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+        if waits.count(ingest.AIRLINE_REFRESH_SECONDS) == 2:
+            raise LoaderStoppedError
+
+    async with httpx.AsyncClient() as client:
+        with pytest.raises(LoaderStoppedError):
+            await ingest._keep_airlines(RECEIVER_URL, cleaner, client=client, sleep=sleep)
+
+    assert cleaner.airlines == {"SYN": "Synthetic Air"}
+    retry, refresh = ingest.AIRLINE_RETRY_SECONDS, ingest.AIRLINE_REFRESH_SECONDS
+    assert waits == [retry, retry, refresh, refresh]
+    # One warning for the outage and one line for the load, however often each repeats.
+    assert [record.getMessage() for record in caplog.records] == [
+        "airline names are not available; retrying",
+        "airline names loaded from the receiver",
+    ]
+    assert caplog.records[0].reason == "the receiver answered HTTP 503 for its start page"
+    assert caplog.records[1].airlines == 1
 
 
 def test_time_helper_is_readable_by_the_cleaner() -> None:

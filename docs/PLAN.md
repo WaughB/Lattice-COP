@@ -150,8 +150,16 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       - CI is green: lint, types, tests at 100% coverage, secret scan, and no
         fixable HIGH or CRITICAL CVE.
       - The README follows the documentation checklist.
-      Still open for the owner, outside the gate: the final project licence
-      (Apache-2.0 is a placeholder).
+      The owner confirmed Apache-2.0 as the final project licence on
+      2026-11-16.
+
+### Added at the owner's request: airline names (2026-11-16)
+- [x] Airline name from the callsign, using the airline table inside the
+      readsb image; no outside service
+- [x] Confirmed live: six of six airline flights read back from Lattice with
+      the airline in their description
+- Route lookups (origin and destination) were asked for "if easy and no
+  cost" and are not built; see [DECISIONS.md](DECISIONS.md).
 
 ## Stop-and-ask points
 

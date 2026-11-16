@@ -256,13 +256,13 @@ Besides position, height, speed and heading, each aircraft entity carries what t
 | `ontology.specific_type` | Type, such as `BOEING 737-800` | Database |
 | `transponder_codes` | Mode S address and flight ID, squawk, barometric altitude | Receiver |
 | `indicators.emergency` | True for squawk 7500, 7600 or 7700, or an ADS-B emergency state | Receiver |
-| `description` | All of the above in words, plus operator, build year, size class, selected altitude and whether the aircraft is military | Both |
+| `description` | All of the above in words, plus airline, operator, build year, size class, selected altitude and whether the aircraft is military | Both |
 
 ![An aircraft selected in the Lattice UI, with its type, callsign, altitude, heading and speed in the track panel](docs/img/aircraft-track-details.webp)
 
 *One aircraft selected in the Lattice UI. The line `Airplane › BOEING 737 MAX 8` matches `ontology.platform_type` and `specific_type`; callsign, data type, altitude, heading and speed are below it.*
 
-The Entity Visualizer shows only the name. The other fields are visible in the Lattice UI of your Sandboxes environment and through the Entities API. The database is the copy built into the readsb image, so new aircraft may be missing. Nothing is looked up on the internet. Owner names are left out for aircraft in the FAA's LADD and PIA privacy programmes.
+The Entity Visualizer shows only the name. The other fields are visible in the Lattice UI of your Sandboxes environment and through the Entities API. The airline is the one the callsign belongs to: `adsb-ingest` reads tar1090's airline table from the readsb container and looks up the first three letters of a callsign shaped like a flight number. The operator is the registered owner or operator, which for an airliner is often a leasing trust. Both databases are the copies built into the readsb image, so new aircraft and airlines may be missing. Nothing is looked up on the internet, and there is no route (origin and destination): the free route sources do not allow their data to be passed on. Owner names are left out for aircraft in the FAA's LADD and PIA privacy programmes.
 
 ## Teardown
 
@@ -398,7 +398,7 @@ The three screenshots in `docs/img/` are the one exception: each is a single mom
 | [readsb](https://github.com/wiedehopf/readsb) by wiedehopf | ADS-B decoding | GPL-3.0-or-later. Used unmodified, in its own container. |
 | [tar1090](https://github.com/wiedehopf/tar1090) by wiedehopf | Receiver web map | GPL-2.0-or-later. Used unmodified, inside the readsb container. |
 | [docker-adsb-ultrafeeder](https://github.com/sdr-enthusiasts/docker-adsb-ultrafeeder) by sdr-enthusiasts | Packaging of readsb and tar1090 | GPL-3.0. Upstream image, pulled unmodified. |
-| [tar1090-db](https://github.com/wiedehopf/tar1090-db) by wiedehopf, from the aircraft database maintained by [Mictronics](https://github.com/Mictronics/readsb) | Aircraft type, registration, operator and build year | Read by readsb from the copy inside the upstream image. Not stored in or redistributed from this repository. |
+| [tar1090-db](https://github.com/wiedehopf/tar1090-db) by wiedehopf, from the aircraft database maintained by [Mictronics](https://github.com/Mictronics/readsb) | Aircraft type, registration, operator and build year; airline names by ICAO code | Read by readsb and by `adsb-ingest` from the copy inside the upstream image. Not stored in or redistributed from this repository. |
 | Lattice SDK and [Entity Visualizer sample app](https://github.com/anduril/sample-app-entity-visualizer) by Anduril Industries | Entities API and map app | Used under the Anduril Lattice SDK License Agreement. Not redistributed here. |
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) via [Leaflet](https://leafletjs.com/) | Base map in the visualizer | © OpenStreetMap contributors. Leaflet is BSD-2-Clause. |
 | [usbipd-win](https://github.com/dorssel/usbipd-win) by Frans van Dorsselaer | Shares the RTL-SDR into WSL2 | GPL-3.0. Installed by the owner; not redistributed. |

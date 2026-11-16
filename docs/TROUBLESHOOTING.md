@@ -77,7 +77,7 @@ Work from the antenna towards Lattice.
 
 3. **`adsb-ingest` exits at once with "ADSB_SOURCE=adsbx is not supported".** The ADS-B Exchange fallback is not built. Set `ADSB_SOURCE=receiver`.
 
-Aircraft show their callsign, or their hex code when no callsign has been heard yet. Type and registration come from the database inside the readsb image; a very new aircraft may be missing from it.
+Aircraft show their callsign, or their hex code when no callsign has been heard yet. Type and registration come from the database inside the readsb image; a very new aircraft may be missing from it. Airline names come from the same image. If `adsb-ingest` logs `airline names are not available; retrying`, readsb was not ready yet; it tries again every minute and aircraft are published without airline names until then.
 
 ## No ships
 
