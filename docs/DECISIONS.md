@@ -360,3 +360,19 @@ requirements doc and current vendor docs disagree (vendor docs win).
   traffic at one moment each; the README's data-handling section says so.
 - **Message-flow diagram redrawn.** One line per box, wider boxes, and
   six-sided decision boxes in place of diamonds, which wasted space.
+- **Soak test result.** Two hours and three minutes, 16:45 to 18:48 UTC, with
+  the receiver, both ingest services and the map app running. No container
+  restarted and memory stayed flat; the figures are in `docs/PLAN.md`. The
+  Sandboxes environment, issued at about 16:02 UTC, was expected to end
+  mid-run but answered at every sample, so the whole run was against a live
+  Lattice. Eight updates out of about 12,900 sent were rejected with HTTP 403
+  and an empty body, the same transient the owner accepted at the Phase 5
+  gate. The publisher logs at most one such error every 30 seconds, so the
+  log shows fewer lines than the `publish.rejected` counter.
+- **Soak ran on the pre-rename build.** The rename to Tampa-COP landed while
+  the soak was running, and restarting would have reset it. The rename
+  changed names only. Afterwards the old containers were removed, the stack
+  was rebuilt as Compose project `tampa-cop`, and both services published
+  under the new entity IDs within a minute.
+- **Phase 7 gate closed.** Every line of the definition of done is met. The
+  final project licence remains the owner's open decision.

@@ -125,8 +125,33 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 
 ### Phase 7: Docs and hardening
 - [x] README to the documentation checklist (all fourteen sections); `docs/TROUBLESHOOTING.md`
-- [ ] 2-hour soak test: flat memory, no crash loops
-- [ ] **Gate:** definition of done met
+- [x] 2-hour soak test: flat memory, no crash loops. Live run 2026-11-16,
+      16:45 to 18:48 UTC, all four services, sampled every five minutes:
+      - No restarts; every container kept its original start time.
+      - Memory: `ais-ingest` 45 to 49 MiB, `adsb-ingest` 44 to 45 MiB after
+        the first minute, `readsb` 96 to 103 MiB, with no upward trend. The
+        map app rose from 1.42 to 1.48 GiB in the first 35 minutes and then
+        stayed there for the remaining 87.
+      - AIS: one connection for the whole run; 2,259 of 2,264 updates
+        published, 4 throttled, 1 rejected.
+      - ADS-B: 7,381 polls, none failed; 10,604 updates published, 16,405
+        throttled, 4 retried successfully, 7 rejected.
+      - All 8 rejections were the HTTP 403 with an empty body that the owner
+        accepted at the Phase 5 gate. Lattice answered at every sample.
+      The run used the image built just before the rename to Tampa-COP. The
+      stack was then rebuilt under the new name and checked: both services
+      published, and Lattice held live `tampa-cop-ais-...` and
+      `tampa-cop-adsb-...` entities.
+- [x] **Gate:** definition of done met (2026-11-16):
+      - `docker compose --profile sdr up -d` gives live ships and aircraft at
+        <http://127.0.0.1:5173> (owner's Phase 6 check; repeated after the rename
+        through the Entities API).
+      - Icons, names, positions, headings and expiry are right (Phase 6).
+      - CI is green: lint, types, tests at 100% coverage, secret scan, and no
+        fixable HIGH or CRITICAL CVE.
+      - The README follows the documentation checklist.
+      Still open for the owner, outside the gate: the final project licence
+      (Apache-2.0 is a placeholder).
 
 ## Stop-and-ask points
 
