@@ -7,6 +7,10 @@ Live Tampa Bay ships (AIS) and aircraft (ADS-B) streamed into a Lattice Sandboxe
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.14-blue)](pyproject.toml)
 
+![Ships and aircraft over Tampa Bay, drawn as pink track icons on a dark map](docs/img/tampa-bay-tracks.webp)
+
+*Tampa Bay on 16 November 2026: ships (AIS) and the aircraft overhead (ADS-B), published by this project and shown in the Lattice UI of the owner's Sandboxes environment. Cropped to the map.*
+
 > Disclaimer: This is an independent personal project. It is not affiliated with, endorsed by, or sponsored by Anduril Industries. Anduril and Lattice are trademarks of Anduril Industries, Inc. This repository does not contain or redistribute the Lattice SDK; it is installed from Anduril's official package registries under Anduril's SDK License Agreement.
 
 > Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb. No live data is stored in or distributed from this repository.
@@ -63,18 +67,19 @@ flowchart LR
 ### One message, start to finish
 
 ```mermaid
+%%{init: {"flowchart": {"wrappingWidth": 320, "padding": 24, "nodeSpacing": 60, "rankSpacing": 42}}}%%
 flowchart TD
-  A["Receive raw message"] --> B{"Valid and inside AOI?"}
-  B -- no --> X["Drop and count the reason"]
-  B -- yes --> C["Normalize units and fields"]
-  C --> D["Merge cached static data (ship name, callsign)"]
-  D --> E{"Changed and past throttle window?"}
-  E -- no --> F["Update cache only"]
-  E -- yes --> G["Build Lattice track entity"]
-  G --> H["PublishEntity"]
-  H -- error --> I["Retry with backoff"]
+  A["Message arrives (AIS or ADS-B)"] --> B{{"Valid, and inside the area?"}}
+  B -- "no" --> X["Drop it and count the reason"]
+  B -- "yes" --> C["Convert units and tidy the fields"]
+  C --> D["Add the remembered name and details"]
+  D --> E{{"New details, or throttle time up?"}}
+  E -- "no" --> F["Hold it back (counted as throttled)"]
+  E -- "yes" --> G["Build the Lattice track entity"]
+  G --> H["Publish it to Lattice"]
+  H -- "failed" --> I["Wait, then try again"]
   I --> H
-  H -- ok --> J["Shown on map until expiry"]
+  H -- "accepted" --> J["On the map until it expires"]
 ```
 
 ## Prerequisites
@@ -206,6 +211,12 @@ The map app puts your Lattice credentials in the page it serves. It is bound to 
 - A ship shows as `MMSI` and its number until its name has been received, which can take six minutes.
 - An aircraft shows its callsign, else its registration, else its ICAO hex code, and sits where the receiver's own map (<http://127.0.0.1:8080>) shows it.
 - A ship stays for 10 minutes after its last report and an aircraft for 60 seconds. Stop a service and its tracks disappear by themselves.
+- In the Lattice UI each ship and aircraft icon points along its heading:
+
+  ![Ships in the channels of Port Tampa Bay, each icon turned to the ship's heading](docs/img/port-tampa-ships.webp)
+
+  *Ships in the channels of Port Tampa Bay, with aircraft passing over.*
+
 - The sample map app shows a plain marker and a name. Icons, heading and the aircraft details below are visible in the Lattice UI of your environment (open the environment's hostname in a browser and sign in with the user and password from its details page).
 
 **In the logs**
@@ -246,6 +257,10 @@ Besides position, height, speed and heading, each aircraft entity carries what t
 | `transponder_codes` | Mode S address and flight ID, squawk, barometric altitude | Receiver |
 | `indicators.emergency` | True for squawk 7500, 7600 or 7700, or an ADS-B emergency state | Receiver |
 | `description` | All of the above in words, plus operator, build year, size class, selected altitude and whether the aircraft is military | Both |
+
+![An aircraft selected in the Lattice UI, with its type, callsign, altitude, heading and speed in the track panel](docs/img/aircraft-track-details.webp)
+
+*One aircraft selected in the Lattice UI. The line `Airplane › BOEING 737 MAX 8` matches `ontology.platform_type` and `specific_type`; callsign, data type, altitude, heading and speed are below it.*
 
 The Entity Visualizer shows only the name. The other fields are visible in the Lattice UI of your Sandboxes environment and through the Entities API. The database is the copy built into the readsb image, so new aircraft may be missing. Nothing is looked up on the internet. Owner names are left out for aircraft in the FAA's LADD and PIA privacy programmes.
 
@@ -372,6 +387,8 @@ Tests never touch the network: AISStream, readsb and Lattice are mocked. Total b
 ## Data handling
 
 No AIS or ADS-B data is stored, archived or redistributed. Messages are held in memory only long enough to clean, convert and publish them to the owner's own Lattice Sandboxes environment. Every test fixture is synthetic: made-up MMSIs in the `999000000`-`999999999` range and made-up ICAO hex codes starting with `ffff`. A CI job enforces this.
+
+The three screenshots in `docs/img/` are the one exception: each is a single moment of live traffic, added with the owner's approval. They show the Lattice UI, which is Anduril's software, only to illustrate what this project publishes; they are cropped to the map and track panel.
 
 ## Credits and third-party notices
 

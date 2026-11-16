@@ -351,3 +351,12 @@ requirements doc and current vendor docs disagree (vendor docs win).
   now appears only where it describes what the project connects to. Entities
   published under the old prefix expire by themselves. Git history keeps the
   old name.
+- **Screenshots added at the owner's instruction.** The owner supplied five
+  screenshots of the Lattice UI and asked for them in the README, after the
+  licence review above had flagged that the SDK licence gives no explicit
+  permission to publish them. Three are used. They are cropped to the map and
+  the track panel, which leaves out the Anduril logo and the Sandbox banner,
+  in keeping with the rule against Anduril logos in the repo. They show live
+  traffic at one moment each; the README's data-handling section says so.
+- **Message-flow diagram redrawn.** One line per box, wider boxes, and
+  six-sided decision boxes in place of diamonds, which wasted space.

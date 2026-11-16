@@ -118,13 +118,13 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       ingest services were stopped at 16:34:57 UTC with 98 ships and 7
       aircraft live. No aircraft was live 82 seconds later, and no ship
       10 minutes 20 seconds later.
-- [ ] Screenshots to `docs/img/` only after owner approval (none taken yet;
-      the owner first checks the Developer Program terms)
+- [x] Screenshots to `docs/img/` only after owner approval (2026-11-16: the
+      owner supplied five screenshots of the Lattice UI and asked for them in
+      the README; three are used, cropped to the map and track panel)
 - [x] **Gate:** owner sign-off (2026-11-16)
 
 ### Phase 7: Docs and hardening
-- [x] README to the documentation checklist (all fourteen sections, except
-      the screenshot, which waits for the owner); `docs/TROUBLESHOOTING.md`
+- [x] README to the documentation checklist (all fourteen sections); `docs/TROUBLESHOOTING.md`
 - [ ] 2-hour soak test: flat memory, no crash loops
 - [ ] **Gate:** definition of done met
 
