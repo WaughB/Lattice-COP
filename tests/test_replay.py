@@ -132,8 +132,14 @@ def test_adsb_replay_gives_the_expected_counts() -> None:
     ]
     by_key = {track.key: track for track in published}
     assert by_key["ffff01"].name == "SYN101"
+    assert published[0].description == (
+        "SYNTHETIC JET 700 (SYN7); large aircraft; registration SYN-REG1; "
+        "operator SYNTHETIC AIR; built 2015; squawk 6005; barometric altitude 34,800 ft"
+    )
+    assert published[0].specific_type == "SYNTHETIC JET 700"
     assert by_key["ffff07"].description == "on ground"
     assert by_key["ffff08"].name == "SYN-REG8"
     assert "EMERGENCY: general emergency" in by_key["ffff08"].description
     assert by_key["ffff09"].name == "ffff09"
-    assert published[1].description == "altitude approximate"
+    assert by_key["ffff08"].emergency is True
+    assert published[1].description == "barometric altitude 3,000 ft; altitude approximate"

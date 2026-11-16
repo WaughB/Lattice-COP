@@ -115,6 +115,100 @@ def test_describe_lists_type_registration_squawk_and_flags() -> None:
     assert adsb.describe(plane(), None) == ""
 
 
+def test_describe_uses_everything_the_receiver_and_database_know() -> None:
+    aircraft = plane(
+        type_code="B739",
+        type_name="SYNTHETIC 737-900",
+        registration="SYN-REG1",
+        operator="SYNTHETIC AIR",
+        year_built="2015",
+        db_flags=adsb.DB_MILITARY,
+        category="A3",
+        squawk="6005",
+        emergency="lifeguard",
+        alt_baro_ft=27000,
+        selected_altitude_ft=12000,
+        position_source="tisb_icao",
+    )
+    assert adsb.describe(aircraft, None) == (
+        "SYNTHETIC 737-900 (B739); large aircraft; military; registration SYN-REG1; "
+        "operator SYNTHETIC AIR; built 2015; squawk 6005; priority: medical flight; "
+        "barometric altitude 27,000 ft; selected altitude 12,000 ft; "
+        "from ground radar (TIS-B)"
+    )
+
+
+@pytest.mark.parametrize(
+    ("value", "squawk"),
+    [("1200", "1200"), (" 0421 ", "0421"), ("7780", None), ("120", None), ("", None), (None, None)],
+)
+def test_squawk_rule_wants_four_octal_digits(value: str | None, squawk: str | None) -> None:
+    assert adsb.clean_squawk(value) == squawk
+
+
+@pytest.mark.parametrize(
+    ("aircraft", "state"),
+    [
+        (plane(squawk="7600", emergency="none"), "radio failure"),
+        (plane(squawk="1200", emergency="general"), "general emergency"),
+        (plane(emergency="downed"), "downed aircraft"),
+        # Medical and minimum-fuel flights have priority but are not emergencies.
+        (plane(emergency="lifeguard"), None),
+        (plane(emergency="none"), None),
+        (plane(), None),
+    ],
+)
+def test_emergency_comes_from_the_squawk_or_the_adsb_status(
+    aircraft: Aircraft, state: str | None
+) -> None:
+    assert adsb.emergency_state(aircraft) == state
+
+
+@pytest.mark.parametrize(
+    ("aircraft", "label"),
+    [
+        (plane(type_name=" SYNTHETIC 737-900 ", type_code="B739"), "SYNTHETIC 737-900 (B739)"),
+        (plane(type_name="SYNTHETIC 737-900"), "SYNTHETIC 737-900"),
+        (plane(type_code="B739"), "B739"),
+        (plane(), ""),
+    ],
+)
+def test_type_label(aircraft: Aircraft, label: str) -> None:
+    assert adsb.type_label(aircraft) == label
+
+
+@pytest.mark.parametrize(
+    ("flags", "name"),
+    [
+        (0, "SYNTHETIC OWNER"),
+        (adsb.DB_MILITARY, "SYNTHETIC OWNER"),
+        (adsb.DB_LADD, ""),
+        (adsb.DB_PIA, ""),
+        (adsb.DB_MILITARY | adsb.DB_LADD, ""),
+    ],
+)
+def test_operator_is_left_out_for_aircraft_in_a_privacy_programme(flags: int, name: str) -> None:
+    assert adsb.operator_name(plane(operator=" SYNTHETIC OWNER ", db_flags=flags)) == name
+
+
+@pytest.mark.parametrize(
+    ("source", "note"),
+    [
+        ("adsb_icao", None),
+        ("mode_s", None),
+        ("adsr_icao", "relayed by a ground station (ADS-R)"),
+        ("tisb_trackfile", "from ground radar (TIS-B)"),
+        ("mlat", "multilateration"),
+        ("adsc", "satellite (ADS-C)"),
+        (None, None),
+    ],
+)
+def test_position_source_is_noted_only_when_it_is_not_the_aircraft(
+    source: str | None, note: str | None
+) -> None:
+    assert adsb.position_source_note(plane(position_source=source)) == note
+
+
 def test_rules_come_from_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     for name, value in {
         "LATTICE_URL": "lattice-test.invalid",
@@ -158,6 +252,8 @@ def test_a_good_aircraft_becomes_a_track() -> None:
             geom_rate_fpm=-640.0,
             baro_rate_fpm=-600.0,
             squawk="6005",
+            alt_baro_ft=34000,
+            type_name="SYNTHETIC 737-900",
         ),
     )
 
@@ -175,7 +271,14 @@ def test_a_good_aircraft_becomes_a_track() -> None:
         vertical_rate_fpm=-640.0,
         callsign="SYN101",
         registration="SYN-REG1",
-        description="B739; registration SYN-REG1; squawk 6005",
+        description=(
+            "SYNTHETIC 737-900 (B739); registration SYN-REG1; squawk 6005; "
+            "barometric altitude 34,000 ft"
+        ),
+        specific_type="SYNTHETIC 737-900",
+        squawk="6005",
+        pressure_altitude_ft=34000,
+        emergency=False,
     )
     assert target.counts == {"kept": 1}
     assert target.tracked == 1
@@ -191,7 +294,13 @@ def test_missing_speed_track_and_names_are_left_empty() -> None:
     assert track.callsign is None
     assert track.registration is None
     assert track.altitude_hae_m == pytest.approx(914.4 + GEOID)
-    assert track.description == "altitude approximate"
+    assert track.description == "barometric altitude 3,000 ft; altitude approximate"
+    assert (track.specific_type, track.squawk, track.emergency) == (None, None, False)
+    assert track.pressure_altitude_ft == 3000
+
+
+def test_type_code_stands_in_when_there_is_no_long_type_name() -> None:
+    assert keep(cleaner(), plane(type_code="B739")).specific_type == "B739"
 
 
 def test_heading_falls_back_to_track() -> None:
@@ -262,6 +371,7 @@ def test_emergency_squawk_is_kept_flagged_and_logged_once(
     first = keep(target, plane(squawk="7700"))
     keep(target, plane(squawk="7700"), NOW + 1)
     assert "EMERGENCY: general emergency" in first.description
+    assert first.emergency is True
     assert target.counts == {"kept": 2, "emergency_squawk": 1}
     assert len(caplog.records) == 1
     assert caplog.records[0].squawk == "7700"
@@ -269,7 +379,7 @@ def test_emergency_squawk_is_kept_flagged_and_logged_once(
 
     # A different code, or the same code after a normal one, is a new event.
     keep(target, plane(squawk="7600"), NOW + 2)
-    keep(target, plane(squawk="1200"), NOW + 3)
+    assert keep(target, plane(squawk="1200"), NOW + 3).emergency is False
     keep(target, plane(squawk="7600"), NOW + 4)
     assert target.counts["emergency_squawk"] == 3
     assert len(caplog.records) == 3

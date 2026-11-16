@@ -70,7 +70,11 @@ services:
       READSB_ALT: ${RECEIVER_ALT_M:-0}m
       # 0 keeps the antenna location out of the JSON that tar1090 serves.
       READSB_RX_LOCATION_ACCURACY: "0"
+      # No download at start: tar1090 and the aircraft database stay as built into the image.
       UPDATE_TAR1090: "false"
+      # Adds registration, type, operator and year to aircraft.json from the
+      # tar1090-db database that ships inside the image.
+      TAR1090_ENABLE_AC_DB: "true"
       GRAPHS1090_DISABLE: "true"
       READSB_ENABLE_HEATMAP: "false"
       READSB_ENABLE_TRACES: "false"

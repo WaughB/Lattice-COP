@@ -122,6 +122,14 @@ def test_parses_the_fields_cleaning_needs() -> None:
                 "geom_rate": -640,
                 "baro_rate": -600,
                 "squawk": "6005",
+                "category": "A3",
+                "emergency": "none",
+                "type": "adsb_icao",
+                "nav_altitude_mcp": 36000,
+                "desc": "SYNTHETIC 737-900",
+                "ownOp": "SYNTHETIC AIR",
+                "year": "2015",
+                "dbFlags": 1,
             }
         )
     ).aircraft
@@ -140,6 +148,14 @@ def test_parses_the_fields_cleaning_needs() -> None:
         geom_rate_fpm=-640.0,
         baro_rate_fpm=-600.0,
         squawk="6005",
+        category="A3",
+        emergency="none",
+        position_source="adsb_icao",
+        selected_altitude_ft=36000.0,
+        type_name="SYNTHETIC 737-900",
+        operator="SYNTHETIC AIR",
+        year_built="2015",
+        db_flags=1,
     )
 
 
@@ -151,6 +167,9 @@ def test_alt_baro_ground_marks_the_aircraft_on_the_ground() -> None:
     assert aircraft.alt_baro_ft is None
     assert aircraft.squawk is None
     assert aircraft.flight is None
+    # Without readsb's aircraft database there are no database fields at all.
+    assert (aircraft.type_name, aircraft.operator, aircraft.year_built) == (None, None, None)
+    assert aircraft.db_flags == 0
 
 
 @respx.mock

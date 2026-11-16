@@ -242,7 +242,11 @@ async def test_adsb_pipeline_polls_cleans_and_publishes(
     assert aircraft["aliases"].name == "SYN101"
     assert aircraft["location"].position.altitude_hae_meters == pytest.approx(10668.0)
     assert aircraft["mil_view"].environment == "ENVIRONMENT_AIR"
-    assert by_id["lattice-cop-adsb-ffff04"]["description"] == "altitude approximate"
+    assert by_id["lattice-cop-adsb-ffff04"]["description"] == (
+        "barometric altitude 3,000 ft; altitude approximate"
+    )
+    assert by_id["lattice-cop-adsb-ffff04"]["transponder_codes"].mode_c_altitude_ft == 3000
+    assert aircraft["transponder_codes"].mode_s.address == 0xFFFF01
 
     stopped = caplog.records[-1]
     assert stopped.getMessage() == "adsb-ingest stopped; tracks will expire in Lattice"

@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 """Track to Lattice entity mapping. Every vessel and aircraft is synthetic."""
 
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
 
-from lattice_cop.lattice.entity import entity_id, track_to_entity
+from lattice_cop.lattice.entity import entity_id, mode_s_address, track_to_entity
 from lattice_cop.models import Source, Track
 from tests.builders import T0, after
 
@@ -53,10 +54,15 @@ def test_vessel_mapping() -> None:
     assert entity["description"] == "Cargo; 190 m x 32 m"
     assert entity["aliases"].name == "SYNTHETIC ONE"
     assert [(alt.id, alt.type) for alt in entity["aliases"].alternate_ids] == [
-        ("999000001", "ALT_ID_TYPE_MMSI_ID")
+        ("999000001", "ALT_ID_TYPE_MMSI_ID"),
+        ("SYN1", "ALT_ID_TYPE_CALLSIGN"),
     ]
     assert entity["ontology"].template == "TEMPLATE_TRACK"
     assert entity["ontology"].platform_type == "Surface Vessel"
+    assert entity["ontology"].specific_type is None
+    # Transponder codes and the emergency flag are for aircraft only.
+    assert "transponder_codes" not in entity
+    assert "indicators" not in entity
     assert entity["mil_view"].environment == "ENVIRONMENT_SURFACE"
     assert entity["mil_view"].disposition == "DISPOSITION_NEUTRAL"
     assert entity["provenance"].integration_name == "lattice-cop-ais"
@@ -84,9 +90,14 @@ def test_aircraft_mapping() -> None:
     assert entity["expiry_time"] == after(60)
     assert "description" not in entity
     assert entity["aliases"].name == "SYN101"
-    # The SDK has no alternate-ID type for an ICAO address, so none is sent.
+    # The SDK has no alternate-ID type for an ICAO address: it goes in the Mode S codes.
     assert entity["aliases"].alternate_ids is None
     assert entity["ontology"].platform_type == "Airplane"
+    assert entity["ontology"].specific_type is None
+    codes = entity["transponder_codes"]
+    assert codes.mode_s.address == 0xFFFF01
+    assert (codes.mode_s.id, codes.mode3, codes.mode_c_altitude_ft) == (None, None, None)
+    assert entity["indicators"].emergency is False
     assert entity["mil_view"].environment == "ENVIRONMENT_AIR"
     assert entity["provenance"].integration_name == "lattice-cop-adsb"
     assert entity["provenance"].data_type == "ads-b"
@@ -97,6 +108,51 @@ def test_aircraft_mapping() -> None:
     assert location.velocity_enu.e == pytest.approx(0.0, abs=1e-9)
     assert location.velocity_enu.n == pytest.approx(-231.4998)
     assert location.velocity_enu.u == pytest.approx(-3.2512)
+
+
+def test_enriched_aircraft_mapping() -> None:
+    enriched = replace(
+        AIRCRAFT,
+        callsign="SYN101",
+        registration="SYN-REG1",
+        description="SYNTHETIC JET 700 (SYN7); squawk 7700; EMERGENCY: general emergency",
+        specific_type="SYNTHETIC JET 700",
+        squawk="7700",
+        pressure_altitude_ft=34812.4,
+        emergency=True,
+    )
+    entity = track_to_entity(enriched, created_time=T0, now=T0, expiry_seconds=60)
+
+    assert [(alt.id, alt.type) for alt in entity["aliases"].alternate_ids] == [
+        ("SYN101", "ALT_ID_TYPE_CALLSIGN"),
+        ("SYN-REG1", "ALT_ID_TYPE_REGISTRATION_ID"),
+    ]
+    assert entity["ontology"].platform_type == "Airplane"
+    assert entity["ontology"].specific_type == "SYNTHETIC JET 700"
+    assert entity["description"].startswith("SYNTHETIC JET 700 (SYN7)")
+    codes = entity["transponder_codes"]
+    assert codes.mode_s.id == "SYN101"
+    assert codes.mode_s.address == 0xFFFF01
+    # The squawk goes out as it is read aloud.
+    assert codes.mode3 == 7700
+    assert codes.mode_c_altitude_ft == 34812
+    assert entity["indicators"].emergency is True
+
+
+@pytest.mark.parametrize(
+    ("key", "address"),
+    [
+        ("ffff01", 0xFFFF01),
+        ("000001", 1),
+        ("fffffe", 0xFFFFFE),
+        # Outside the range Lattice accepts, or not an ICAO address at all.
+        ("000000", None),
+        ("ffffff", None),
+        ("~ffff05", None),
+    ],
+)
+def test_mode_s_address(key: str, address: int | None) -> None:
+    assert mode_s_address(key) == address
 
 
 def test_unknown_speed_course_and_heading_are_left_out() -> None:

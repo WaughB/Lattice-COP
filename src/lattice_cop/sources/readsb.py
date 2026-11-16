@@ -3,6 +3,8 @@
 
 Field names follow readsb's README-json.md. Values are kept as readsb reports
 them (feet, knots, degrees, feet per minute); cleaning and conversion come later.
+Registration, type, operator and build year are only present when readsb runs
+with its aircraft database (``TAR1090_ENABLE_AC_DB`` in the ultrafeeder image).
 """
 
 from dataclasses import dataclass
@@ -41,6 +43,20 @@ class Aircraft:
     geom_rate_fpm: float | None = None
     baro_rate_fpm: float | None = None
     squawk: str | None = None
+    category: str | None = None
+    """ADS-B emitter category, ``A0`` to ``D7``."""
+    emergency: str | None = None
+    """ADS-B emergency or priority status, such as ``none`` or ``general``."""
+    position_source: str | None = None
+    """readsb's ``type``: how the best data arrived, such as ``adsb_icao`` or ``tisb_icao``."""
+    selected_altitude_ft: float | None = None
+    """The altitude set on the autopilot panel."""
+    type_name: str | None = None
+    """Long type name. This and the three fields below come from readsb's aircraft database."""
+    operator: str | None = None
+    year_built: str | None = None
+    db_flags: int = 0
+    """Database bit field: 1 military, 2 interesting, 4 PIA, 8 LADD."""
 
     @property
     def is_icao(self) -> bool:
@@ -117,6 +133,14 @@ def parse_snapshot(payload: object) -> Snapshot:
             geom_rate_fpm=_number(entry.get("geom_rate")),
             baro_rate_fpm=_number(entry.get("baro_rate")),
             squawk=_text(entry.get("squawk")),
+            category=_text(entry.get("category")),
+            emergency=_text(entry.get("emergency")),
+            position_source=_text(entry.get("type")),
+            selected_altitude_ft=_number(entry.get("nav_altitude_mcp")),
+            type_name=_text(entry.get("desc")),
+            operator=_text(entry.get("ownOp")),
+            year_built=_text(entry.get("year")),
+            db_flags=int(_number(entry.get("dbFlags")) or 0),
         )
         for entry in entries
         if isinstance(entry, dict) and isinstance(entry.get("hex"), str) and entry["hex"]

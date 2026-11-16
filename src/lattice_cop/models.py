@@ -41,3 +41,11 @@ class Track:
     callsign: str | None = None
     registration: str | None = None
     description: str = ""
+    specific_type: str | None = None
+    """What kind of aircraft it is, such as ``BOEING 737-800``."""
+    squawk: str | None = None
+    """Transponder code: four octal digits."""
+    pressure_altitude_ft: float | None = None
+    """Barometric altitude as the transponder reports it."""
+    emergency: bool = False
+    """Whether the aircraft is declaring an emergency."""
