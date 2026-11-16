@@ -317,3 +317,10 @@ requirements doc and current vendor docs disagree (vendor docs win).
   each callsign or ICAO address to a third-party service (such as adsbdb or
   adsb.lol), which is a new data source with its own terms. That is the
   owner's call.
+- **Phase 6 signed off by the owner.** The visual items were checked by the
+  owner on the map and in the Lattice UI. Expiry was measured through the
+  Entities API instead of by eye: aircraft were gone within 82 seconds of
+  stopping `adsb-ingest`, and ships within 10 minutes 20 seconds of stopping
+  `ais-ingest`. No screenshot is in the repo yet.
+- **README status table removed.** The documentation checklist has no status
+  section; `docs/PLAN.md` carries the phase state.

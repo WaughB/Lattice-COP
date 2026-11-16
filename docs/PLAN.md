@@ -111,12 +111,20 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       How the Lattice UI shows them is part of the Phase 6 visual check.
 
 ### Phase 6: Visual verification
-- [ ] Icons, names, headings, expiry, no duplicates
-- [ ] Screenshots to `docs/img/` only after owner approval
-- [ ] **Gate:** owner sign-off
+- [x] Icons, names, headings, expiry, no duplicates (2026-11-16: the owner
+      checked the map, the receiver's map and the Lattice UI and reported
+      that every check passes)
+- [x] Expiry when a source stops (2026-11-16, through the Entities API): both
+      ingest services were stopped at 16:34:57 UTC with 98 ships and 7
+      aircraft live. No aircraft was live 82 seconds later, and no ship
+      10 minutes 20 seconds later.
+- [ ] Screenshots to `docs/img/` only after owner approval (none taken yet;
+      the owner first checks the Developer Program terms)
+- [x] **Gate:** owner sign-off (2026-11-16)
 
 ### Phase 7: Docs and hardening
-- [ ] README to the documentation checklist; `docs/TROUBLESHOOTING.md`
+- [x] README to the documentation checklist (all fourteen sections, except
+      the screenshot, which waits for the owner); `docs/TROUBLESHOOTING.md`
 - [ ] 2-hour soak test: flat memory, no crash loops
 - [ ] **Gate:** definition of done met
 
