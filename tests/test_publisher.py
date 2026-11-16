@@ -11,9 +11,9 @@ import httpx
 import pytest
 from anduril.core.api_error import ApiError
 
-from lattice_cop.clean.throttle import Throttle
-from lattice_cop.lattice import publisher as pub
-from lattice_cop.models import Source, Track
+from tampa_cop.clean.throttle import Throttle
+from tampa_cop.lattice import publisher as pub
+from tampa_cop.models import Source, Track
 from tests.builders import T0
 
 SECRET_HEADER = "Bearer fake-secret-token"  # noqa: S105 - test value, not a credential
@@ -124,7 +124,7 @@ async def test_publishes_with_expiry_counted_from_the_publish_time(running: Runn
     await publisher.drain()
 
     (call,) = entities.calls
-    assert call["entity_id"] == "lattice-cop-ais-999000001"
+    assert call["entity_id"] == "tampa-cop-ais-999000001"
     assert call["created_time"] == clock.wall()
     assert call["expiry_time"] == clock.wall() + timedelta(seconds=600)
     assert call["provenance"].source_update_time == T0
@@ -157,8 +157,8 @@ async def test_throttle_holds_back_unchanged_updates_but_not_changed_ones(runnin
     assert publisher.counts == {"submitted": 4, "throttled": 1, "superseded": 1, "published": 2}
     # The newer report replaced the one still waiting, so the vessel was sent once.
     assert sorted(call["entity_id"] for call in entities.calls) == [
-        "lattice-cop-ais-999000001",
-        "lattice-cop-ais-999000002",
+        "tampa-cop-ais-999000001",
+        "tampa-cop-ais-999000002",
     ]
     assert entities.calls[0]["location"].position.latitude_degrees == 27.76
 
@@ -190,7 +190,7 @@ async def test_gives_up_after_the_last_attempt_and_logs_once(
     running: Running, caplog: pytest.LogCaptureFixture
 ) -> None:
     publisher, entities, clock = running
-    caplog.set_level(logging.ERROR, logger="lattice_cop.lattice.publisher")
+    caplog.set_level(logging.ERROR, logger="tampa_cop.lattice.publisher")
     entities.script = [api_error(503)] * 4 + [httpx.ConnectError("reset")] * 4
 
     publisher.submit(track())
@@ -215,7 +215,7 @@ async def test_validation_errors_are_never_retried_and_are_logged_with_the_entit
     status: int, running: Running, caplog: pytest.LogCaptureFixture
 ) -> None:
     publisher, entities, clock = running
-    caplog.set_level(logging.ERROR, logger="lattice_cop.lattice.publisher")
+    caplog.set_level(logging.ERROR, logger="tampa_cop.lattice.publisher")
     entities.script = [api_error(status)]
 
     publisher.submit(track())
@@ -226,7 +226,7 @@ async def test_validation_errors_are_never_retried_and_are_logged_with_the_entit
     assert publisher.counts == {"submitted": 1, "rejected": 1}
     (record,) = caplog.records
     assert record.getMessage() == "Lattice rejected an entity"
-    assert record.entity_id == "lattice-cop-ais-999000001"
+    assert record.entity_id == "tampa-cop-ais-999000001"
     assert record.status_code == status
     assert record.detail == f"{{'message': 'status {status}'}}"
     # The error's headers hold a token; they must never reach the log.
@@ -238,7 +238,7 @@ async def test_repeated_errors_of_one_kind_are_logged_once_per_interval(
     running: Running, caplog: pytest.LogCaptureFixture
 ) -> None:
     publisher, entities, clock = running
-    caplog.set_level(logging.ERROR, logger="lattice_cop.lattice.publisher")
+    caplog.set_level(logging.ERROR, logger="tampa_cop.lattice.publisher")
     entities.script = [api_error(401)] * 3 + [api_error(400), api_error(401)]
 
     for key in ("999000001", "999000002", "999000003"):

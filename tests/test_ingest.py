@@ -13,9 +13,9 @@ import httpx
 import pytest
 import respx
 
-from lattice_cop import ingest
-from lattice_cop.config import Settings, load_settings
-from lattice_cop.sources import aisstream
+from tampa_cop import ingest
+from tampa_cop.config import Settings, load_settings
+from tampa_cop.sources import aisstream
 from tests.builders import aircraft_entry, ais_position, ais_ship_static, time_utc
 
 RECEIVER_URL = "http://readsb/data/aircraft.json"
@@ -121,7 +121,7 @@ async def test_supervise_raises_when_a_worker_dies() -> None:
 async def test_ais_pipeline_cleans_merges_static_data_and_publishes(
     settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.ingest")
+    caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
     now = datetime.now(UTC)
     frames = [
         json.dumps(message).encode()
@@ -142,7 +142,7 @@ async def test_ais_pipeline_cleans_merges_static_data_and_publishes(
 
     assert json.loads(connection.sent[0])["APIKey"] == "fake-aisstream-key"
     (call,) = entities.calls
-    assert call["entity_id"] == f"lattice-cop-ais-{VESSEL_MMSI}"
+    assert call["entity_id"] == f"tampa-cop-ais-{VESSEL_MMSI}"
     assert call["aliases"].name == "SYNTHETIC ONE"
     assert call["description"].startswith("Cargo; 190 m x 32 m")
     assert call["location"].position.latitude_degrees == 27.75
@@ -159,7 +159,7 @@ async def test_ais_pipeline_cleans_merges_static_data_and_publishes(
 async def test_ais_pipeline_logs_its_counts_every_minute(
     settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.ingest")
+    caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
     stop = asyncio.Event()
     waits: list[float] = []
 
@@ -206,7 +206,7 @@ def readsb_answers(*documents: dict[str, Any]) -> Callable[[httpx.Request], http
 async def test_adsb_pipeline_polls_cleans_and_publishes(
     settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.ingest")
+    caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
     now = datetime.now(UTC).timestamp()
     first = {
         "now": now,
@@ -237,15 +237,15 @@ async def test_adsb_pipeline_polls_cleans_and_publishes(
 
     assert route.call_count >= 4
     by_id = {call["entity_id"]: call for call in entities.calls}
-    assert set(by_id) == {"lattice-cop-adsb-ffff01", "lattice-cop-adsb-ffff04"}
-    aircraft = by_id["lattice-cop-adsb-ffff01"]
+    assert set(by_id) == {"tampa-cop-adsb-ffff01", "tampa-cop-adsb-ffff04"}
+    aircraft = by_id["tampa-cop-adsb-ffff01"]
     assert aircraft["aliases"].name == "SYN101"
     assert aircraft["location"].position.altitude_hae_meters == pytest.approx(10668.0)
     assert aircraft["mil_view"].environment == "ENVIRONMENT_AIR"
-    assert by_id["lattice-cop-adsb-ffff04"]["description"] == (
+    assert by_id["tampa-cop-adsb-ffff04"]["description"] == (
         "barometric altitude 3,000 ft; altitude approximate"
     )
-    assert by_id["lattice-cop-adsb-ffff04"]["transponder_codes"].mode_c_altitude_ft == 3000
+    assert by_id["tampa-cop-adsb-ffff04"]["transponder_codes"].mode_c_altitude_ft == 3000
     assert aircraft["transponder_codes"].mode_s.address == 0xFFFF01
 
     stopped = caplog.records[-1]
@@ -263,7 +263,7 @@ async def test_adsb_pipeline_polls_cleans_and_publishes(
 async def test_adsb_pipeline_keeps_polling_when_readsb_is_down_and_logs_counts(
     settings: Settings, caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.ingest")
+    caplog.set_level(logging.INFO, logger="tampa_cop.ingest")
     respx.get(RECEIVER_URL).mock(side_effect=httpx.ConnectError("refused"))
     stop = asyncio.Event()
     waits: list[float] = []

@@ -222,7 +222,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# --- Lattice-COP additions ---
+# --- Tampa-COP additions ---
 # Secrets and local settings (the receiver location is private too)
 .env
 .env.*

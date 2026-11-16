@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from lattice_cop.config import Settings
+from tampa_cop.config import Settings
 
 FAKE_HOST = "lattice-test.invalid"
 FAKE_SANDBOX_TOKEN = "fake-sandbox-token"  # noqa: S105 - test value, not a credential
@@ -15,7 +15,7 @@ FAKE_CLIENT_SECRET = "fake-client-secret"  # noqa: S105 - test value, not a cred
 
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Remove every Lattice-COP variable so the host's environment never leaks into a test."""
+    """Remove every Tampa-COP variable so the host's environment never leaks into a test."""
     names = {name.upper() for name in Settings.model_fields}
     for key in list(os.environ):
         if key.upper() in names:

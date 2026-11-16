@@ -13,11 +13,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Final, Self
 
-from lattice_cop.clean.common import KEPT, Fix, is_position_jump
-from lattice_cop.config import Settings
-from lattice_cop.geo import FEET_TO_METERS, BoundingBox, distance_nm
-from lattice_cop.models import Source, Track
-from lattice_cop.sources.readsb import Aircraft, Snapshot
+from tampa_cop.clean.common import KEPT, Fix, is_position_jump
+from tampa_cop.config import Settings
+from tampa_cop.geo import FEET_TO_METERS, BoundingBox, distance_nm
+from tampa_cop.models import Source, Track
+from tampa_cop.sources.readsb import Aircraft, Snapshot
 
 EMERGENCY_SQUAWKS: Final = {
     "7500": "unlawful interference",
@@ -88,7 +88,7 @@ ALTITUDE_APPROXIMATE: Final = "altitude approximate"
 ALTITUDE_UNKNOWN: Final = "altitude unknown"
 ON_GROUND: Final = "on ground"
 
-log = logging.getLogger("lattice_cop.clean.adsb")
+log = logging.getLogger("tampa_cop.clean.adsb")
 
 
 @dataclass(frozen=True, slots=True)

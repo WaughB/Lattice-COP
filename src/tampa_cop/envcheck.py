@@ -8,7 +8,7 @@ never values.
 import re
 from pathlib import Path
 
-from lattice_cop.config import Settings
+from tampa_cop.config import Settings
 
 _KEY_LINE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
 

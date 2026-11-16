@@ -7,7 +7,7 @@ import httpx
 import pytest
 import respx
 
-from lattice_cop.sources import readsb
+from tampa_cop.sources import readsb
 
 URL = "http://readsb.invalid/data/aircraft.json"
 

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from lattice_cop.config import ConfigError, load_settings, min_poll_seconds
+from tampa_cop.config import ConfigError, load_settings, min_poll_seconds
 from tests.conftest import FAKE_CLIENT_SECRET, FAKE_ENV_TOKEN, FAKE_HOST, FAKE_SANDBOX_TOKEN
 
 

@@ -20,9 +20,9 @@ from typing import Any, Final, Protocol
 import httpx
 from anduril.core.api_error import ApiError
 
-from lattice_cop.clean.throttle import Throttle
-from lattice_cop.lattice.entity import entity_id, track_to_entity
-from lattice_cop.models import Track
+from tampa_cop.clean.throttle import Throttle
+from tampa_cop.lattice.entity import entity_id, track_to_entity
+from tampa_cop.models import Track
 
 DEFAULT_CONCURRENCY: Final = 8
 DEFAULT_MAX_ATTEMPTS: Final = 4
@@ -46,7 +46,7 @@ REJECTED: Final = "rejected"
 FAILED: Final = "failed"
 SUPERSEDED: Final = "superseded"
 
-log = logging.getLogger("lattice_cop.lattice.publisher")
+log = logging.getLogger("tampa_cop.lattice.publisher")
 
 
 class EntitiesClient(Protocol):

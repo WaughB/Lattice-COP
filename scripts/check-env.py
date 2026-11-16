@@ -10,7 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from lattice_cop import envcheck
+from tampa_cop import envcheck
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 

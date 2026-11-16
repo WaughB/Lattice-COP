@@ -17,8 +17,8 @@ from pydantic import SecretStr
 from websockets.asyncio.server import ServerConnection, serve
 from websockets.exceptions import ConnectionClosedError
 
-from lattice_cop.geo import BoundingBox
-from lattice_cop.sources import aisstream as stream
+from tampa_cop.geo import BoundingBox
+from tampa_cop.sources import aisstream as stream
 
 FAKE_KEY = SecretStr("fake-aisstream-key")
 AOI = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
@@ -294,7 +294,7 @@ def test_unsubscribed_message_types_are_counted_as_other(kind: object) -> None:
 
 def test_server_error_is_logged_without_the_api_key(caplog: pytest.LogCaptureFixture) -> None:
     stats = stream.StreamStats()
-    caplog.set_level(logging.ERROR, logger="lattice_cop.sources.aisstream")
+    caplog.set_level(logging.ERROR, logger="tampa_cop.sources.aisstream")
 
     assert count({"error": "Api Key fake-aisstream-key Is Not Valid " + "x" * 500}, stats) is False
 
@@ -311,7 +311,7 @@ def test_redaction_leaves_text_alone_when_the_key_is_empty() -> None:
 
 def test_confirmation_with_compression_is_logged(caplog: pytest.LogCaptureFixture) -> None:
     stats = stream.StreamStats()
-    caplog.set_level(logging.INFO, logger="lattice_cop.sources.aisstream")
+    caplog.set_level(logging.INFO, logger="tampa_cop.sources.aisstream")
 
     assert count(confirmation(compressed=True), stats) is False
 
@@ -328,7 +328,7 @@ def test_confirmation_with_compression_is_logged(caplog: pytest.LogCaptureFixtur
 def test_confirmation_without_compression_warns(
     message: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.sources.aisstream")
+    caplog.set_level(logging.INFO, logger="tampa_cop.sources.aisstream")
     assert count(message, stream.StreamStats()) is False
     assert caplog.records[-1].levelname == "WARNING"
     assert caplog.records[-1].compression is False
@@ -415,7 +415,7 @@ async def test_a_subscription_that_cannot_be_sent_in_time_is_retried(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     monkeypatch.setattr(stream, "SUBSCRIBE_DEADLINE_SECONDS", 0.01)
-    caplog.set_level(logging.WARNING, logger="lattice_cop.sources.aisstream")
+    caplog.set_level(logging.WARNING, logger="tampa_cop.sources.aisstream")
     stuck = FakeConnection([frame(position())], send_delay=5)
 
     _, sleep, stats = await run_scripted([stuck])
@@ -430,7 +430,7 @@ async def test_a_subscription_that_cannot_be_sent_in_time_is_retried(
 async def test_connection_loss_is_logged_without_the_api_key(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.INFO, logger="lattice_cop.sources.aisstream")
+    caplog.set_level(logging.INFO, logger="tampa_cop.sources.aisstream")
 
     await run_scripted(
         [OSError("refused for fake-aisstream-key"), FakeConnection([frame(position())])]

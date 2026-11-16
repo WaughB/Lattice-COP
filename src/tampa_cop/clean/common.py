@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
-from lattice_cop.geo import distance_nm
+from tampa_cop.geo import distance_nm
 
 KEPT: Final = "kept"
 """Counter name for reports that passed every rule."""

@@ -4,7 +4,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from lattice_cop import smoke
+from tampa_cop import smoke
 
 NOW = datetime(2026, 11, 14, 12, 0, 0, tzinfo=UTC)
 
@@ -22,7 +22,7 @@ class FakeEntities:
 def test_smoke_entity_is_a_synthetic_surface_track_in_tampa_bay() -> None:
     entity = smoke.build_smoke_entity(NOW)
 
-    assert entity["entity_id"] == "lattice-cop-ais-999000001"
+    assert entity["entity_id"] == "tampa-cop-ais-999000001"
     assert entity["is_live"] is True
     assert entity["aliases"].name == smoke.SMOKE_NAME
     alternate = entity["aliases"].alternate_ids[0]
@@ -31,7 +31,7 @@ def test_smoke_entity_is_a_synthetic_surface_track_in_tampa_bay() -> None:
     assert entity["ontology"].platform_type == "Surface Vessel"
     assert entity["mil_view"].environment == "ENVIRONMENT_SURFACE"
     assert entity["mil_view"].disposition == "DISPOSITION_NEUTRAL"
-    assert entity["provenance"].integration_name == "lattice-cop-ais"
+    assert entity["provenance"].integration_name == "tampa-cop-ais"
     assert entity["provenance"].data_type == "ais"
     assert entity["provenance"].source_update_time == NOW
 

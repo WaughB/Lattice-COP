@@ -12,8 +12,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Final
 
-from lattice_cop.geo import BoundingBox, distance_nm
-from lattice_cop.sources.readsb import ReadsbError, Snapshot
+from tampa_cop.geo import BoundingBox, distance_nm
+from tampa_cop.sources.readsb import ReadsbError, Snapshot
 
 POLL_INTERVAL_SECONDS: Final = 1.0
 PROGRESS_INTERVAL_SECONDS: Final = 60.0

@@ -18,8 +18,8 @@ from anduril import (
 )
 
 SMOKE_MMSI = 999000001
-SMOKE_ENTITY_ID = f"lattice-cop-ais-{SMOKE_MMSI}"
-SMOKE_NAME = "LATTICE-COP SMOKE TEST"
+SMOKE_ENTITY_ID = f"tampa-cop-ais-{SMOKE_MMSI}"
+SMOKE_NAME = "TAMPA-COP SMOKE TEST"
 SMOKE_LAT = 27.7500
 """Open water in the middle of Tampa Bay, between St. Petersburg and Apollo Beach."""
 SMOKE_LON = -82.5500
@@ -44,7 +44,7 @@ def build_smoke_entity(
     """
     return {
         "entity_id": SMOKE_ENTITY_ID,
-        "description": "Synthetic vessel published by the Lattice-COP smoke test",
+        "description": "Synthetic vessel published by the Tampa-COP smoke test",
         "is_live": True,
         "created_time": now,
         "expiry_time": now + timedelta(seconds=expiry_seconds),
@@ -62,7 +62,7 @@ def build_smoke_entity(
         ),
         "ontology": Ontology(template="TEMPLATE_TRACK", platform_type="Surface Vessel"),
         "provenance": Provenance(
-            integration_name="lattice-cop-ais",
+            integration_name="tampa-cop-ais",
             data_type="ais",
             source_update_time=now,
         ),

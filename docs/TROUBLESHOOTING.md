@@ -118,7 +118,7 @@ docker compose --profile sdr up -d --force-recreate ais-ingest adsb-ingest visua
 Check with one synthetic vessel:
 
 ```bash
-# Ubuntu (WSL2): publishes a vessel named LATTICE-COP SMOKE TEST for five minutes
+# Ubuntu (WSL2): publishes a vessel named TAMPA-COP SMOKE TEST for five minutes
 docker compose run --rm ais-ingest smoke-test
 ```
 

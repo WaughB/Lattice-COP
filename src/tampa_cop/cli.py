@@ -17,16 +17,16 @@ from typing import NoReturn
 import httpx
 from anduril.core.api_error import ApiError
 
-from lattice_cop import __version__, ingest, sdrcheck, smoke
-from lattice_cop.config import ConfigError, Settings, load_settings
-from lattice_cop.lattice.client import build_async_client, build_client
-from lattice_cop.logs import configure_logging
-from lattice_cop.sources import readsb
+from tampa_cop import __version__, ingest, sdrcheck, smoke
+from tampa_cop.config import ConfigError, Settings, load_settings
+from tampa_cop.lattice.client import build_async_client, build_client
+from tampa_cop.logs import configure_logging
+from tampa_cop.sources import readsb
 
 EXIT_OK = 0
 EXIT_FAILED = 1
 
-log = logging.getLogger("lattice_cop.cli")
+log = logging.getLogger("tampa_cop.cli")
 
 
 async def _run_until_signalled(pipeline: Callable[[asyncio.Event], Awaitable[None]]) -> None:

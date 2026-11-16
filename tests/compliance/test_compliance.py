@@ -118,7 +118,7 @@ def test_sdk_check_flags_vendored_paths(path: str) -> None:
 
 
 def test_sdk_check_allows_our_own_files() -> None:
-    ours = ["pyproject.toml", "uv.lock", "src/lattice_cop/lattice/entity.py", "README.md"]
+    ours = ["pyproject.toml", "uv.lock", "src/tampa_cop/lattice/entity.py", "README.md"]
     assert checks.sdk_path_problems(ours) == []
 
 

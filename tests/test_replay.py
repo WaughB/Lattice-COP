@@ -12,11 +12,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from lattice_cop.clean import adsb, ais
-from lattice_cop.clean.throttle import Throttle
-from lattice_cop.geo import BoundingBox
-from lattice_cop.models import Track
-from lattice_cop.sources.readsb import parse_snapshot
+from tampa_cop.clean import adsb, ais
+from tampa_cop.clean.throttle import Throttle
+from tampa_cop.geo import BoundingBox
+from tampa_cop.models import Track
+from tampa_cop.sources.readsb import parse_snapshot
 
 FIXTURES = Path(__file__).parent / "fixtures"
 AOI = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)

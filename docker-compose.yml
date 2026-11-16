@@ -1,17 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
-# Lattice-COP stack. Works unchanged on Docker Desktop (WSL2) and Docker Engine.
+# Tampa-COP stack. Works unchanged on Docker Desktop (WSL2) and Docker Engine.
 #
 #   docker compose up -d                 ingest services + visualizer
 #   docker compose --profile sdr up -d   the same, plus readsb on the RTL-SDR
 #
 # Everything a person opens is bound to 127.0.0.1. Images are built locally
 # and must never be pushed to a registry: they contain the Lattice SDK.
-name: lattice-cop
+name: tampa-cop
 
 x-ingest: &ingest
   build:
     context: .
-  image: lattice-cop:local
+  image: tampa-cop:local
   env_file:
     - .env
   read_only: true
@@ -36,7 +36,7 @@ services:
   visualizer:
     build:
       context: docker/visualizer
-    image: lattice-cop-visualizer:local
+    image: tampa-cop-visualizer:local
     environment:
       VITE_LATTICE_URL: ${LATTICE_URL:?Set LATTICE_URL in .env to your environment hostname, without https://}
       VITE_LATTICE_SANDBOX_TOKEN: ${LATTICE_SANDBOXES_TOKEN:-}

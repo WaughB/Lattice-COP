@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-# Lattice-COP ingest image. Shared by the ais-ingest and adsb-ingest services.
+# Tampa-COP ingest image. Shared by the ais-ingest and adsb-ingest services.
 #
 # This image contains the proprietary Lattice SDK (installed from PyPI at build
 # time). Build it locally only. Never push it to any registry.

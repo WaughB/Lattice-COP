@@ -1,9 +1,9 @@
-# Lattice-COP
+# Tampa-COP
 
 Live Tampa Bay ships (AIS) and aircraft (ADS-B) streamed into a Lattice Sandboxes environment as track entities, and shown on a local map.
 
-[![CI](https://github.com/WaughB/Lattice-COP/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/WaughB/Lattice-COP/actions/workflows/ci.yml)
-[![Coverage gate](https://img.shields.io/badge/coverage-%E2%89%A590%25%20enforced%20in%20CI-brightgreen)](https://github.com/WaughB/Lattice-COP/actions/workflows/ci.yml)
+[![CI](https://github.com/WaughB/Tampa-COP/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/WaughB/Tampa-COP/actions/workflows/ci.yml)
+[![Coverage gate](https://img.shields.io/badge/coverage-%E2%89%A590%25%20enforced%20in%20CI-brightgreen)](https://github.com/WaughB/Tampa-COP/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.14-blue)](pyproject.toml)
 
@@ -15,7 +15,7 @@ Live Tampa Bay ships (AIS) and aircraft (ADS-B) streamed into a Lattice Sandboxe
 
 ## What it does
 
-Lattice-COP is a small containerized Python 3.14 service. It receives live AIS vessel reports from AISStream.io and live ADS-B aircraft reports from a home RTL-SDR receiver decoded by readsb. It cleans each report, converts it to a Lattice track entity, and publishes it to the owner's own Lattice Sandboxes environment. Anduril's Entity Visualizer sample app, run locally, shows the result.
+Tampa-COP is a small containerized Python 3.14 service. It receives live AIS vessel reports from AISStream.io and live ADS-B aircraft reports from a home RTL-SDR receiver decoded by readsb. It cleans each report, converts it to a Lattice track entity, and publishes it to the owner's own Lattice Sandboxes environment. Anduril's Entity Visualizer sample app, run locally, shows the result.
 
 The default area of interest is Tampa Bay: a box from 27.40 N, 83.00 W to 28.20 N, 82.25 W, and for aircraft a 60 nm radius around Tampa International Airport (27.9755 N, 82.5332 W). Both are configurable.
 
@@ -105,8 +105,8 @@ Every command says which shell it runs in. Ubuntu commands run from the repo fol
 
    ```bash
    # Ubuntu (WSL2)
-   git clone https://github.com/WaughB/Lattice-COP.git
-   cd Lattice-COP
+   git clone https://github.com/WaughB/Tampa-COP.git
+   cd Tampa-COP
    ```
 
 2. **Create your settings file.** `.env` is ignored by git. Never commit it.
@@ -153,7 +153,7 @@ Every command says which shell it runs in. Ubuntu commands run from the repo fol
    docker compose run --rm ais-ingest smoke-test
    ```
 
-   Open <http://127.0.0.1:5173> in a Windows browser. A vessel named `LATTICE-COP SMOKE TEST` should appear in the middle of Tampa Bay and disappear five minutes later.
+   Open <http://127.0.0.1:5173> in a Windows browser. A vessel named `TAMPA-COP SMOKE TEST` should appear in the middle of Tampa Bay and disappear five minutes later.
 
 6. **Run the receiver signal check.** Do this in daytime, when there is more traffic.
 
@@ -341,7 +341,7 @@ All commands run in **Ubuntu (WSL2)**.
 
 ```bash
 # Ubuntu (WSL2): keep the virtualenv off the Windows drive
-export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/lattice-cop"
+export UV_PROJECT_ENVIRONMENT="$HOME/.venvs/tampa-cop"
 uv sync
 ```
 

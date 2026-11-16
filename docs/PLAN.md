@@ -1,4 +1,4 @@
-# Lattice-COP build plan
+# Tampa-COP build plan
 
 Source of truth: the owner's requirements doc (2026-11-14). This file tracks
 progress through its eight phases. A phase is not started until the previous
@@ -45,7 +45,7 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
       secret): the vessel was published and read back from Lattice as live,
       at the right position, with a five-minute expiry.
 - [x] **Gate:** vessel appears at the right spot, then expires (2026-11-15):
-      the owner's screenshot shows `LATTICE-COP SMOKE TEST` mid-bay in the
+      the owner's screenshot shows `TAMPA-COP SMOKE TEST` mid-bay in the
       visualizer; after expiry Lattice answers 404 for the entity.
 
 ### Phase 2: AISStream connection

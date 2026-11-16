@@ -5,7 +5,7 @@ from typing import Any
 
 from anduril import AsyncLattice, Lattice
 
-from lattice_cop.config import ConfigError, Settings
+from tampa_cop.config import ConfigError, Settings
 
 SANDBOX_HEADER = "Anduril-Sandbox-Authorization"
 """Header that carries the account-level Sandboxes token on every call."""

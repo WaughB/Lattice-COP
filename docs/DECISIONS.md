@@ -33,7 +33,7 @@ requirements doc and current vendor docs disagree (vendor docs win).
   3.14 support. The REST sample pins 5.4.0.
 - **Virtualenv outside the repo.** The repo lives on a OneDrive-synced Windows
   drive, where a `.venv` is slow and symlinks are unreliable. Development uses
-  `UV_PROJECT_ENVIRONMENT=$HOME/.venvs/lattice-cop`.
+  `UV_PROJECT_ENVIRONMENT=$HOME/.venvs/tampa-cop`.
 - **Commit identity.** Commits use the owner's GitHub noreply address so a
   personal email is not published in a public repo.
 - **Coverage badge.** No Codecov account is used. The README badge is a static
@@ -342,3 +342,12 @@ requirements doc and current vendor docs disagree (vendor docs win).
     show Anduril's product and logo, and the agreement gives no permission to
     publish them. The agreement does not cover the Sandboxes service; any
     terms accepted at sign-up there have not been seen.
+- **Project renamed to Tampa-COP (owner decision).** The first name contained
+  the word "Lattice", which is Anduril's mark; the SDK licence (3.7) gives no
+  right to use it, and the requirements bar Anduril trademarks from the repo
+  name. The repository, the Python package (`tampa_cop`), the image and
+  Compose project names, the entity ID prefix (`tampa-cop-ais-...`,
+  `tampa-cop-adsb-...`) and the integration names changed with it. "Lattice"
+  now appears only where it describes what the project connects to. Entities
+  published under the old prefix expire by themselves. Git history keeps the
+  old name.

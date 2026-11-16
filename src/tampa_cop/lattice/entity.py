@@ -25,12 +25,12 @@ from anduril import (
     TransponderCodes,
 )
 
-from lattice_cop.geo import KNOTS_TO_MPS, heading_quaternion, velocity_enu
-from lattice_cop.models import Source, Track
+from tampa_cop.geo import KNOTS_TO_MPS, heading_quaternion, velocity_enu
+from tampa_cop.models import Source, Track
 
-ENTITY_ID_PREFIX: Final = "lattice-cop"
+ENTITY_ID_PREFIX: Final = "tampa-cop"
 
-_INTEGRATION: Final = {Source.AIS: "lattice-cop-ais", Source.ADSB: "lattice-cop-adsb"}
+_INTEGRATION: Final = {Source.AIS: "tampa-cop-ais", Source.ADSB: "tampa-cop-adsb"}
 _DATA_TYPE: Final = {Source.AIS: "ais", Source.ADSB: "ads-b"}
 _PLATFORM: Final = {Source.AIS: "Surface Vessel", Source.ADSB: "Airplane"}
 
@@ -39,7 +39,7 @@ MAX_MODE_S_ADDRESS: Final = 0xFFFFFE
 
 
 def entity_id(track: Track) -> str:
-    """Return the fixed entity ID: ``lattice-cop-ais-{MMSI}`` or ``lattice-cop-adsb-{hex}``."""
+    """Return the fixed entity ID: ``tampa-cop-ais-{MMSI}`` or ``tampa-cop-adsb-{hex}``."""
     return f"{ENTITY_ID_PREFIX}-{track.source.value}-{track.key}"
 
 

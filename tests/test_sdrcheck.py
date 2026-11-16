@@ -5,9 +5,9 @@ from collections.abc import Callable
 
 import pytest
 
-from lattice_cop import sdrcheck
-from lattice_cop.geo import BoundingBox
-from lattice_cop.sources.readsb import Aircraft, ReadsbError, Snapshot
+from tampa_cop import sdrcheck
+from tampa_cop.geo import BoundingBox
+from tampa_cop.sources.readsb import Aircraft, ReadsbError, Snapshot
 
 AOI = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
 RECEIVER = (27.90, -82.50)

@@ -13,9 +13,9 @@ import httpx
 import pytest
 import respx
 
-import lattice_cop
-from lattice_cop import cli, sdrcheck
-from lattice_cop.config import Settings
+import tampa_cop
+from tampa_cop import cli, sdrcheck
+from tampa_cop.config import Settings
 from tests.conftest import FAKE_ENV_TOKEN, FAKE_HOST, FAKE_SANDBOX_TOKEN
 
 ENTITIES_URL = f"https://{FAKE_HOST}/api/v1/entities"
@@ -32,7 +32,7 @@ def restore_logging() -> Iterator[None]:
 
 
 def test_version_is_set() -> None:
-    assert lattice_cop.__version__
+    assert tampa_cop.__version__
 
 
 def test_lattice_sdk_imports() -> None:
@@ -152,7 +152,7 @@ def test_smoke_test_publishes_and_logs_the_expiry(
 ) -> None:
     monkeypatch.chdir(tmp_path_factory.mktemp("no-dotenv"))
     publish = respx.put(ENTITIES_URL).mock(
-        return_value=httpx.Response(200, json={"entityId": "lattice-cop-ais-999000001"})
+        return_value=httpx.Response(200, json={"entityId": "tampa-cop-ais-999000001"})
     )
 
     with pytest.raises(SystemExit) as excinfo:
@@ -160,7 +160,7 @@ def test_smoke_test_publishes_and_logs_the_expiry(
 
     assert excinfo.value.code == cli.EXIT_OK
     body = json.loads(publish.calls.last.request.content)
-    assert body["entityId"] == "lattice-cop-ais-999000001"
+    assert body["entityId"] == "tampa-cop-ais-999000001"
     assert body["ontology"]["template"] == "TEMPLATE_TRACK"
     assert body["location"]["position"]["altitudeHaeMeters"] == 0.0
     assert "expiryTime" in body
@@ -168,7 +168,7 @@ def test_smoke_test_publishes_and_logs_the_expiry(
     out = capsys.readouterr().out
     record = json.loads(out.strip().splitlines()[-1])
     assert record["message"] == "smoke test vessel published"
-    assert record["entity_id"] == "lattice-cop-ais-999000001"
+    assert record["entity_id"] == "tampa-cop-ais-999000001"
     assert FAKE_ENV_TOKEN not in out
     assert FAKE_SANDBOX_TOKEN not in out
 

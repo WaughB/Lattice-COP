@@ -6,11 +6,11 @@ from typing import Any
 
 import pytest
 
-from lattice_cop.clean import ais
-from lattice_cop.clean.common import Fix
-from lattice_cop.config import load_settings
-from lattice_cop.geo import BoundingBox
-from lattice_cop.models import Source, Track
+from tampa_cop.clean import ais
+from tampa_cop.clean.common import Fix
+from tampa_cop.config import load_settings
+from tampa_cop.geo import BoundingBox
+from tampa_cop.models import Source, Track
 from tests.builders import (
     IN_AOI,
     T0,

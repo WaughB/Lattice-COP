@@ -23,7 +23,7 @@ from pydantic import SecretStr
 from websockets.asyncio.client import connect
 from websockets.exceptions import WebSocketException
 
-from lattice_cop.geo import BoundingBox
+from tampa_cop.geo import BoundingBox
 
 AISSTREAM_URL: Final = "wss://stream.aisstream.io/v0/stream"
 
@@ -45,7 +45,7 @@ BACKOFF_MAX_SECONDS: Final = 60.0
 _MAX_BACKOFF_DOUBLINGS: Final = 10
 _MAX_ERROR_TEXT: Final = 200
 
-log = logging.getLogger("lattice_cop.sources.aisstream")
+log = logging.getLogger("tampa_cop.sources.aisstream")
 
 MessageHandler = Callable[[dict[str, Any]], None]
 Sleep = Callable[[float], Awaitable[None]]

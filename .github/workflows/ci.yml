@@ -85,7 +85,7 @@ jobs:
       - name: pytest (fails below 90% branch coverage)
         run: uv run pytest --cov --cov-report=term-missing
       - name: Cleaning rules stay at or above 95% coverage
-        run: uv run coverage report --include='*/lattice_cop/clean/*' --fail-under=95
+        run: uv run coverage report --include='*/tampa_cop/clean/*' --fail-under=95
       - name: Coverage summary
         if: always()
         run: |
@@ -163,7 +163,7 @@ jobs:
       - name: Scan the ingest image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: lattice-cop:local
+          image-ref: tampa-cop:local
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
@@ -171,7 +171,7 @@ jobs:
       - name: Scan the visualizer image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: lattice-cop-visualizer:local
+          image-ref: tampa-cop-visualizer:local
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"

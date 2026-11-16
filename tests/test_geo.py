@@ -5,8 +5,8 @@ import math
 
 import pytest
 
-from lattice_cop.config import load_settings
-from lattice_cop.geo import BoundingBox, distance_nm, heading_quaternion, velocity_enu
+from tampa_cop.config import load_settings
+from tampa_cop.geo import BoundingBox, distance_nm, heading_quaternion, velocity_enu
 
 TAMPA_BAY = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
 
@@ -58,7 +58,7 @@ def test_distance_handles_opposite_points() -> None:
 
 
 def test_unit_factors() -> None:
-    from lattice_cop import geo  # noqa: PLC0415
+    from tampa_cop import geo  # noqa: PLC0415
 
     assert geo.KNOTS_TO_MPS == 0.514444
     assert geo.FEET_TO_METERS == 0.3048

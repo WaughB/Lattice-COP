@@ -7,11 +7,11 @@ from typing import Any
 
 import pytest
 
-from lattice_cop.clean import adsb
-from lattice_cop.config import load_settings
-from lattice_cop.geo import BoundingBox
-from lattice_cop.models import Source, Track
-from lattice_cop.sources.readsb import Aircraft, Snapshot, parse_snapshot
+from tampa_cop.clean import adsb
+from tampa_cop.config import load_settings
+from tampa_cop.geo import BoundingBox
+from tampa_cop.models import Source, Track
+from tampa_cop.sources.readsb import Aircraft, Snapshot, parse_snapshot
 from tests.builders import aircraft_entry
 
 AOI = BoundingBox(south=27.40, west=-83.00, north=28.20, east=-82.25)
@@ -365,7 +365,7 @@ def test_an_unchanged_position_between_polls_is_kept_again() -> None:
 def test_emergency_squawk_is_kept_flagged_and_logged_once(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="lattice_cop.clean.adsb")
+    caplog.set_level(logging.WARNING, logger="tampa_cop.clean.adsb")
     target = cleaner()
 
     first = keep(target, plane(squawk="7700"))

@@ -7,12 +7,12 @@ import sys
 
 import pytest
 
-from lattice_cop.logs import JsonFormatter, configure_logging
+from tampa_cop.logs import JsonFormatter, configure_logging
 
 
 def make_record(**extra: object) -> logging.LogRecord:
     record = logging.LogRecord(
-        "lattice_cop.test", logging.INFO, __file__, 1, "hello %s", ("x",), None
+        "tampa_cop.test", logging.INFO, __file__, 1, "hello %s", ("x",), None
     )
     for key, value in extra.items():
         setattr(record, key, value)
@@ -20,13 +20,13 @@ def make_record(**extra: object) -> logging.LogRecord:
 
 
 def test_record_is_one_json_line_with_extras() -> None:
-    line = JsonFormatter().format(make_record(entity_id="lattice-cop-ais-999000001", count=3))
+    line = JsonFormatter().format(make_record(entity_id="tampa-cop-ais-999000001", count=3))
     assert "\n" not in line
     payload = json.loads(line)
     assert payload["level"] == "INFO"
-    assert payload["logger"] == "lattice_cop.test"
+    assert payload["logger"] == "tampa_cop.test"
     assert payload["message"] == "hello x"
-    assert payload["entity_id"] == "lattice-cop-ais-999000001"
+    assert payload["entity_id"] == "tampa-cop-ais-999000001"
     assert payload["count"] == 3
     assert payload["time"].endswith("+00:00")
 
@@ -52,8 +52,8 @@ def test_configure_logging_writes_json_to_stdout(capsys: pytest.CaptureFixture[s
     saved_handlers, saved_level = root.handlers[:], root.level
     try:
         configure_logging("WARNING")
-        logging.getLogger("lattice_cop.test").info("hidden")
-        logging.getLogger("lattice_cop.test").warning("shown", extra={"dropped": 2})
+        logging.getLogger("tampa_cop.test").info("hidden")
+        logging.getLogger("tampa_cop.test").warning("shown", extra={"dropped": 2})
         lines = capsys.readouterr().out.strip().splitlines()
     finally:
         root.handlers[:] = saved_handlers

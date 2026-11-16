@@ -3,8 +3,8 @@
 
 import pytest
 
-from lattice_cop.clean.common import Fix, is_position_jump, number
-from lattice_cop.clean.throttle import Throttle, should_publish
+from tampa_cop.clean.common import Fix, is_position_jump, number
+from tampa_cop.clean.throttle import Throttle, should_publish
 from tests.builders import T0, after
 
 

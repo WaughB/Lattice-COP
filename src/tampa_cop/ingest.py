@@ -17,12 +17,12 @@ from typing import Any, Final
 
 import httpx
 
-from lattice_cop.clean.adsb import AdsbCleaner, AdsbRules
-from lattice_cop.clean.ais import AisCleaner, AisRules
-from lattice_cop.clean.throttle import Throttle
-from lattice_cop.config import Settings
-from lattice_cop.lattice.publisher import EntitiesClient, Publisher
-from lattice_cop.sources import aisstream, readsb
+from tampa_cop.clean.adsb import AdsbCleaner, AdsbRules
+from tampa_cop.clean.ais import AisCleaner, AisRules
+from tampa_cop.clean.throttle import Throttle
+from tampa_cop.config import Settings
+from tampa_cop.lattice.publisher import EntitiesClient, Publisher
+from tampa_cop.sources import aisstream, readsb
 
 COUNTS_INTERVAL_SECONDS: Final = 60.0
 ADSB_POLL_SECONDS: Final = 1.0
@@ -31,7 +31,7 @@ FAILED_POLLS: Final = "failed_polls"
 UNCHANGED_POLLS: Final = "unchanged_polls"
 POLLS: Final = "polls"
 
-log = logging.getLogger("lattice_cop.ingest")
+log = logging.getLogger("tampa_cop.ingest")
 
 Sleep = Callable[[float], Awaitable[None]]
 

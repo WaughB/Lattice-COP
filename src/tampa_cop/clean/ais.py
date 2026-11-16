@@ -12,10 +12,10 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import Any, Final, Self
 
-from lattice_cop.clean.common import KEPT, Fix, is_position_jump, number
-from lattice_cop.config import Settings
-from lattice_cop.geo import BoundingBox
-from lattice_cop.models import Source, Track
+from tampa_cop.clean.common import KEPT, Fix, is_position_jump, number
+from tampa_cop.config import Settings
+from tampa_cop.geo import BoundingBox
+from tampa_cop.models import Source, Track
 
 POSITION_TYPES: Final = frozenset({"PositionReport", "StandardClassBPositionReport"})
 STATIC_TYPES: Final = frozenset({"ShipStaticData", "StaticDataReport"})

@@ -6,8 +6,8 @@ from datetime import timedelta
 
 import pytest
 
-from lattice_cop.lattice.entity import entity_id, mode_s_address, track_to_entity
-from lattice_cop.models import Source, Track
+from tampa_cop.lattice.entity import entity_id, mode_s_address, track_to_entity
+from tampa_cop.models import Source, Track
 from tests.builders import T0, after
 
 VESSEL = Track(
@@ -39,14 +39,14 @@ AIRCRAFT = Track(
 
 
 def test_entity_ids_are_fixed_per_vessel_and_aircraft() -> None:
-    assert entity_id(VESSEL) == "lattice-cop-ais-999000001"
-    assert entity_id(AIRCRAFT) == "lattice-cop-adsb-ffff01"
+    assert entity_id(VESSEL) == "tampa-cop-ais-999000001"
+    assert entity_id(AIRCRAFT) == "tampa-cop-adsb-ffff01"
 
 
 def test_vessel_mapping() -> None:
     entity = track_to_entity(VESSEL, created_time=T0, now=after(30), expiry_seconds=600)
 
-    assert entity["entity_id"] == "lattice-cop-ais-999000001"
+    assert entity["entity_id"] == "tampa-cop-ais-999000001"
     assert entity["is_live"] is True
     assert entity["created_time"] == T0
     # Expiry counts from the publish time, not the message time.
@@ -65,7 +65,7 @@ def test_vessel_mapping() -> None:
     assert "indicators" not in entity
     assert entity["mil_view"].environment == "ENVIRONMENT_SURFACE"
     assert entity["mil_view"].disposition == "DISPOSITION_NEUTRAL"
-    assert entity["provenance"].integration_name == "lattice-cop-ais"
+    assert entity["provenance"].integration_name == "tampa-cop-ais"
     assert entity["provenance"].data_type == "ais"
     assert entity["provenance"].source_update_time == T0
 
@@ -86,7 +86,7 @@ def test_vessel_mapping() -> None:
 def test_aircraft_mapping() -> None:
     entity = track_to_entity(AIRCRAFT, created_time=T0, now=T0, expiry_seconds=60)
 
-    assert entity["entity_id"] == "lattice-cop-adsb-ffff01"
+    assert entity["entity_id"] == "tampa-cop-adsb-ffff01"
     assert entity["expiry_time"] == after(60)
     assert "description" not in entity
     assert entity["aliases"].name == "SYN101"
@@ -99,7 +99,7 @@ def test_aircraft_mapping() -> None:
     assert (codes.mode_s.id, codes.mode3, codes.mode_c_altitude_ft) == (None, None, None)
     assert entity["indicators"].emergency is False
     assert entity["mil_view"].environment == "ENVIRONMENT_AIR"
-    assert entity["provenance"].integration_name == "lattice-cop-adsb"
+    assert entity["provenance"].integration_name == "tampa-cop-adsb"
     assert entity["provenance"].data_type == "ads-b"
 
     location = entity["location"]

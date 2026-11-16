@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Settings for every Lattice-COP command, loaded from the environment or ``.env``.
+"""Settings for every Tampa-COP command, loaded from the environment or ``.env``.
 
 Settings are validated once, at start. A missing or invalid value stops the
 process with a message that names the environment variable. Secrets are held
@@ -11,7 +11,7 @@ from typing import Literal, Self
 from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from lattice_cop.geo import BoundingBox
+from tampa_cop.geo import BoundingBox
 
 SECONDS_PER_30_DAYS = 2_592_000
 """Length of the month used for the ADS-B Exchange quota check (30 days)."""

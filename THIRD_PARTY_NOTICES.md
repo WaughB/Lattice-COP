@@ -4,7 +4,7 @@
 
 > Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb. No live data is stored in or distributed from this repository.
 
-Lattice-COP's own code is licensed under the Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). Nothing below is relicensed by it. None of the software or data listed here is copied into this repository. Each item is installed, pulled or received at build time or run time, under its own terms.
+Tampa-COP's own code is licensed under the Apache License 2.0 (see [LICENSE](LICENSE) and [NOTICE](NOTICE)). Nothing below is relicensed by it. None of the software or data listed here is copied into this repository. Each item is installed, pulled or received at build time or run time, under its own terms.
 
 Licenses were confirmed from each source repository on 2026-11-14.
 
