@@ -9,7 +9,9 @@ Live Tampa Bay ships (AIS) and aircraft (ADS-B) streamed into a Lattice Sandboxe
 
 > Disclaimer: This is an independent personal project. It is not affiliated with, endorsed by, or sponsored by Anduril Industries. Anduril and Lattice are trademarks of Anduril Industries, Inc. This repository does not contain or redistribute the Lattice SDK; it is installed from Anduril's official package registries under Anduril's SDK License Agreement.
 
-> Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb; aircraft type and registration details come from the tar1090-db database. No live data is stored in or distributed from this repository.
+> Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb. No live data is stored in or distributed from this repository.
+
+> Aircraft type, registration and operator details come from the tar1090-db aircraft database, read by readsb.
 
 ## Status
 
