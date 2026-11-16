@@ -84,15 +84,29 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 ### Phase 5: Lattice conversion and publishing
 - [x] `geo.py` conversions, `entity.py` mapping, `publisher.py` (throttle, retries)
 - [x] Both ingest services wired end to end, deterministic entity IDs
-- [ ] **Gate:** 30 minutes with no publish errors beyond retried transients.
+- [x] **Gate:** 30 minutes with no publish errors beyond retried transients.
       Live run 2026-11-15, 18:16 to 18:46 UTC, no restarts, memory under 50 MiB each:
       - AIS: 636 of 636 updates published, no errors.
       - ADS-B: 3,992 published, 2 transient failures retried successfully, and
         2 updates rejected with HTTP 403 (empty body) that were not retried.
       - Lattice held exactly the aircraft readsb had fresh positions for, and
         120 live vessels.
-      The two 403s are outside "retried transients", so the owner decides
-      whether the gate passes as it stands.
+      The two 403s are outside "retried transients". The owner accepted the
+      run as it stands on 2026-11-16: the Sandboxes environment is torn down
+      and provisioned again every few hours, so the odd rejected update is
+      expected.
+
+### Added at the owner's request: aircraft enrichment (2026-11-16)
+- [x] readsb's built-in aircraft database switched on (type, registration,
+      operator, build year)
+- [x] Emitter category, squawk, emergency and priority status, barometric and
+      selected altitude carried through cleaning
+- [x] Lattice mapping: `ontology.specific_type`, callsign and registration
+      alternate IDs, `transponder_codes`, `indicators.emergency`, a fuller
+      description
+- [ ] Confirm against Lattice that every new field is accepted and shown.
+      The Sandboxes environment was gone when this was built, so the check
+      waits for the owner's next environment.
 
 ### Phase 6: Visual verification
 - [ ] Icons, names, headings, expiry, no duplicates

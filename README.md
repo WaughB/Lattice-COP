@@ -9,7 +9,7 @@ Live Tampa Bay ships (AIS) and aircraft (ADS-B) streamed into a Lattice Sandboxe
 
 > Disclaimer: This is an independent personal project. It is not affiliated with, endorsed by, or sponsored by Anduril Industries. Anduril and Lattice are trademarks of Anduril Industries, Inc. This repository does not contain or redistribute the Lattice SDK; it is installed from Anduril's official package registries under Anduril's SDK License Agreement.
 
-> Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb. No live data is stored in or distributed from this repository.
+> Vessel data provided by aisstream.io. Aircraft data comes from the owner's own ADS-B receiver, decoded with readsb; aircraft type and registration details come from the tar1090-db database. No live data is stored in or distributed from this repository.
 
 ## Status
 
@@ -22,7 +22,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 2 | AISStream connection | Gate passed |
 | 3 | RTL-SDR and signal gate | Gate passed |
 | 4 | Data cleaning | Gate passed |
-| 5 | Lattice conversion and publishing | Built and running; 30-minute run done, gate waiting on the owner |
+| 5 | Lattice conversion and publishing | Gate passed. Aircraft enrichment added afterwards; its live check is still open |
 | 6 | Visual verification | Not started |
 | 7 | Docs and hardening | Not started |
 
@@ -184,6 +184,21 @@ docker compose --profile sdr down
 
 Without the RTL-SDR, leave out `--profile sdr`: ships still appear, and `adsb-ingest` waits for a receiver.
 
+### What each aircraft carries
+
+Besides position, height, speed and heading, each aircraft entity carries what the receiver hears and what readsb's built-in aircraft database knows:
+
+| Lattice field | Content | From |
+| --- | --- | --- |
+| `aliases.name` | Callsign, else registration, else ICAO hex | Receiver, database |
+| `aliases.alternate_ids` | Callsign and registration | Receiver, database |
+| `ontology.specific_type` | Type, such as `BOEING 737-800` | Database |
+| `transponder_codes` | Mode S address and flight ID, squawk, barometric altitude | Receiver |
+| `indicators.emergency` | True for squawk 7500, 7600 or 7700, or an ADS-B emergency state | Receiver |
+| `description` | All of the above in words, plus operator, build year, size class, selected altitude and whether the aircraft is military | Both |
+
+The Entity Visualizer shows only the name. The other fields are visible in the Lattice UI of your Sandboxes environment and through the Entities API. The database is the copy built into the readsb image, so new aircraft may be missing. Nothing is looked up on the internet. Owner names are left out for aircraft in the FAA's LADD and PIA privacy programmes.
+
 ## Development
 
 All commands run in **Ubuntu (WSL2)**.
@@ -226,6 +241,7 @@ No AIS or ADS-B data is stored, archived or redistributed. Messages are held in 
 | [readsb](https://github.com/wiedehopf/readsb) by wiedehopf | ADS-B decoding | GPL-3.0-or-later. Used unmodified, in its own container. |
 | [tar1090](https://github.com/wiedehopf/tar1090) by wiedehopf | Receiver web map | GPL-2.0-or-later. Used unmodified, inside the readsb container. |
 | [docker-adsb-ultrafeeder](https://github.com/sdr-enthusiasts/docker-adsb-ultrafeeder) by sdr-enthusiasts | Packaging of readsb and tar1090 | GPL-3.0. Upstream image, pulled unmodified. |
+| [tar1090-db](https://github.com/wiedehopf/tar1090-db) by wiedehopf, from the [Mictronics aircraft database](https://www.mictronics.de/aircraft-database/) | Aircraft type, registration, operator and build year | Read by readsb from the copy inside the upstream image. Not stored in or redistributed from this repository. |
 | Lattice SDK and [Entity Visualizer sample app](https://github.com/anduril/sample-app-entity-visualizer) by Anduril Industries | Entities API and map app | Used under the Anduril Lattice SDK License Agreement. Not redistributed here. |
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) via [Leaflet](https://leafletjs.com/) | Base map in the visualizer | © OpenStreetMap contributors. Leaflet is BSD-2-Clause. |
 | [usbipd-win](https://github.com/dorssel/usbipd-win) by Frans van Dorsselaer | Shares the RTL-SDR into WSL2 | GPL-3.0. Installed by the owner; not redistributed. |

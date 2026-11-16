@@ -268,3 +268,44 @@ requirements doc and current vendor docs disagree (vendor docs win).
   again two seconds later. The requirements say never to retry 4xx, so these
   were not retried; whether to treat an empty-bodied 403 from the Sandboxes
   front end as transient is the owner's call.
+
+## 2026-11-16
+
+- **Phase 5 gate accepted by the owner.** The two un-retried 403s stand. The
+  rule of never retrying a 4xx is unchanged.
+- **Aircraft enrichment (owner request).** This goes beyond the requirements
+  document, which asks only for icon, name, position, heading and expiry.
+  - *Source of the extra data.* Only the receiver and the readsb image are
+    used; nothing is looked up on the internet. `TAR1090_ENABLE_AC_DB=true`
+    makes readsb add registration, type code, long type name, owner or
+    operator and build year from the tar1090-db database that is built into
+    the pinned image. `UPDATE_TAR1090=false` stays, so the container
+    downloads nothing at start and the database is as old as the image.
+    readsb's memory rose from about 65 MiB to about 96 MiB.
+  - *Where it goes in the entity.* `ontology.specific_type` is the long type
+    name, or the type code when there is no long name. `platform_type` stays
+    `Airplane` for every aircraft, as the requirements say. Callsign and
+    registration go out as `ALT_ID_TYPE_CALLSIGN` and
+    `ALT_ID_TYPE_REGISTRATION_ID` (vessels now send their call sign the same
+    way). `transponder_codes` carries the Mode S address (the ICAO hex as a
+    number), the flight ID, the squawk as `mode3` and the barometric altitude
+    as `mode_c_altitude_ft`. The description lists all of it in words.
+  - *Squawk encoding is an assumption.* `mode3` is an integer in the SDK and
+    its notes do not say how to encode the four octal digits. The squawk is
+    sent as it is read aloud (7700 goes out as 7700, not as 4032). This is
+    not yet checked against a live environment.
+  - *Emergencies.* `indicators.emergency` is true for squawks 7500, 7600 and
+    7700 and for the ADS-B states general, no radio, unlawful interference
+    and downed aircraft. Medical ("lifeguard") and minimum-fuel flights are
+    named in the description as a priority but do not set the flag. The flag
+    is sent as false otherwise, so it clears when the emergency ends.
+  - *Privacy.* The database marks aircraft in the FAA's two privacy
+    programmes, LADD and PIA. Their owner or operator name is left out. Type
+    and registration are still sent.
+  - *Not verified live.* The Sandboxes environment had been torn down when
+    this was built (TLS connections reset). The mapping was run against live
+    receiver data locally and against a mocked Lattice in the tests only.
+- **Route, airline and photo lookups not built.** They would mean sending
+  each callsign or ICAO address to a third-party service (such as adsbdb or
+  adsb.lol), which is a new data source with its own terms. That is the
+  owner's call.
