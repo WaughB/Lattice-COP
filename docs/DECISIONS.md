@@ -324,3 +324,21 @@ requirements doc and current vendor docs disagree (vendor docs win).
   `ais-ingest`. No screenshot is in the repo yet.
 - **README status table removed.** The documentation checklist has no status
   section; `docs/PLAN.md` carries the phase state.
+- **SDK licence review (owner request).** Read: the Anduril Lattice Software
+  Development Kit License Agreement, "Updated July 31, 2026", as shipped in
+  `anduril-lattice-sdk` 5.5.0. The sample app's `LICENSE.md` and the licence
+  page on Anduril's developer site carry the same text. This is a reading by
+  the project's tooling, not legal advice.
+  - *In line with it:* the SDK and the sample app are installed at build time,
+    used unmodified and never committed (3.4); no image is pushed (3.4);
+    Anduril's licence files stay in the installed packages (3.8); only the
+    owner's own credentials and environment are used (4.3, 4.4); credentials
+    stay in the git-ignored `.env` and the map app stays on `127.0.0.1` (5.1).
+  - *Fixed:* CI kept installed packages, and so a copy of the SDK, in the
+    repository's GitHub Actions cache. The cache is now off, the stored
+    caches were deleted, and a compliance test keeps it off.
+  - *Open, owner's call:* the repository name contains "Lattice" (3.7 gives
+    no right to Anduril's trade names or marks). Screenshots of the Lattice UI
+    show Anduril's product and logo, and the agreement gives no permission to
+    publish them. The agreement does not cover the Sandboxes service; any
+    terms accepted at sign-up there have not been seen.

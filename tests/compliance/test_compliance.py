@@ -65,6 +65,18 @@ def test_workflows_never_push_images() -> None:
     assert problems == []
 
 
+def test_workflows_never_cache_the_sdk() -> None:
+    workflows = sorted([*WORKFLOWS.glob("*.yml"), *WORKFLOWS.glob("*.yaml")])
+    problems = [
+        problem
+        for workflow in workflows
+        for problem in checks.workflow_cache_problems(
+            workflow.name, workflow.read_text(encoding="utf-8")
+        )
+    ]
+    assert problems == []
+
+
 def test_fixtures_are_synthetic() -> None:
     files = sorted(path for path in FIXTURES.rglob("*") if path.is_file())
     problems = [problem for path in files for problem in checks.fixture_file_problems(path)]
@@ -121,6 +133,12 @@ def test_sdk_check_allows_our_own_files() -> None:
 )
 def test_workflow_check_flags_image_pushes(snippet: str) -> None:
     assert checks.workflow_push_problems("ci.yml", snippet)
+
+
+def test_workflow_check_flags_the_package_cache() -> None:
+    assert checks.workflow_cache_problems("ci.yml", "        with:\n          enable-cache: true\n")
+    assert checks.workflow_cache_problems("ci.yml", "          enable-cache: 'True'\n")
+    assert checks.workflow_cache_problems("ci.yml", "          enable-cache: false\n") == []
 
 
 def test_workflow_check_allows_push_triggers() -> None:

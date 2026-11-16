@@ -85,6 +85,19 @@ def workflow_push_problems(name: str, text: str) -> list[str]:
     ]
 
 
+_SDK_CACHE_PATTERN = re.compile(r"^\s*enable-cache:\s*[\"']?true", re.IGNORECASE | re.MULTILINE)
+
+
+def workflow_cache_problems(name: str, text: str) -> list[str]:
+    """Flag a workflow that keeps installed packages in the Actions cache.
+
+    The cache would hold a copy of the Lattice SDK.
+    """
+    if _SDK_CACHE_PATTERN.search(text):
+        return [f"{name}: the package cache is on, which stores a copy of the Lattice SDK"]
+    return []
+
+
 def _walk(node: object) -> Iterator[tuple[str, object]]:
     """Yield every ``(key, value)`` pair found anywhere inside parsed JSON."""
     if isinstance(node, dict):

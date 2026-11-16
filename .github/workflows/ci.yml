@@ -31,7 +31,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
-          enable-cache: true
+          # No package cache: it would keep a copy of the Lattice SDK in this
+          # public repository's Actions cache.
+          enable-cache: false
       - run: uv sync --frozen
       - run: uv run ruff check --output-format=github .
       - run: uv run ruff format --check .
@@ -60,7 +62,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
-          enable-cache: true
+          # No package cache: it would keep a copy of the Lattice SDK in this
+          # public repository's Actions cache.
+          enable-cache: false
       - run: uv sync --frozen
       - run: uv run mypy
 
@@ -74,7 +78,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
-          enable-cache: true
+          # No package cache: it would keep a copy of the Lattice SDK in this
+          # public repository's Actions cache.
+          enable-cache: false
       - run: uv sync --frozen
       - name: pytest (fails below 90% branch coverage)
         run: uv run pytest --cov --cov-report=term-missing
@@ -117,7 +123,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
-          enable-cache: true
+          # No package cache: it would keep a copy of the Lattice SDK in this
+          # public repository's Actions cache.
+          enable-cache: false
       - run: uv sync --frozen
       - name: Export the lock file
         run: >
@@ -246,7 +254,9 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: ${{ env.UV_VERSION }}
-          enable-cache: true
+          # No package cache: it would keep a copy of the Lattice SDK in this
+          # public repository's Actions cache.
+          enable-cache: false
       - run: uv sync --frozen
       - run: uv run pytest tests/compliance -v
       - name: .env.example covers every setting the code reads
