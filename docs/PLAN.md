@@ -104,9 +104,11 @@ requirements and current vendor docs are logged in [DECISIONS.md](DECISIONS.md).
 - [x] Lattice mapping: `ontology.specific_type`, callsign and registration
       alternate IDs, `transponder_codes`, `indicators.emergency`, a fuller
       description
-- [ ] Confirm against Lattice that every new field is accepted and shown.
-      The Sandboxes environment was gone when this was built, so the check
-      waits for the owner's next environment.
+- [x] Confirm against Lattice that every new field is accepted (2026-11-16,
+      16:12 UTC, new environment): every aircraft inside the area read back
+      from the Entities API with its type, alternate IDs, transponder codes,
+      emergency flag and description as sent, and no update was rejected.
+      How the Lattice UI shows them is part of the Phase 6 visual check.
 
 ### Phase 6: Visual verification
 - [ ] Icons, names, headings, expiry, no duplicates

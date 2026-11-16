@@ -302,9 +302,17 @@ requirements doc and current vendor docs disagree (vendor docs win).
   - *Privacy.* The database marks aircraft in the FAA's two privacy
     programmes, LADD and PIA. Their owner or operator name is left out. Type
     and registration are still sent.
-  - *Not verified live.* The Sandboxes environment had been torn down when
-    this was built (TLS connections reset). The mapping was run against live
-    receiver data locally and against a mocked Lattice in the tests only.
+  - *Verified live later the same day.* The Sandboxes environment had been
+    torn down when this was built (TLS connections reset). On the owner's
+    next environment (16:12 UTC) Lattice accepted every update, and each
+    aircraft read back from the Entities API with all new fields as sent,
+    including `mode3` equal to the squawk as read. How the Lattice UI
+    displays `mode3` is still to be looked at in Phase 6.
+- **Sandboxes environments last two hours.** The owner provisions a new one
+  each time and updates `.env`. The first request to a new environment was
+  answered with 403 and an empty body, and the same request succeeded seconds
+  later. This matches the two 403s of the Phase 5 run, which also came in
+  the first minutes.
 - **Route, airline and photo lookups not built.** They would mean sending
   each callsign or ICAO address to a third-party service (such as adsbdb or
   adsb.lol), which is a new data source with its own terms. That is the

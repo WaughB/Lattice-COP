@@ -24,7 +24,7 @@ Work in progress. The build follows the phases in [docs/PLAN.md](docs/PLAN.md); 
 | 2 | AISStream connection | Gate passed |
 | 3 | RTL-SDR and signal gate | Gate passed |
 | 4 | Data cleaning | Gate passed |
-| 5 | Lattice conversion and publishing | Gate passed. Aircraft enrichment added afterwards; its live check is still open |
+| 5 | Lattice conversion and publishing | Gate passed. Aircraft enrichment added afterwards and checked live |
 | 6 | Visual verification | Not started |
 | 7 | Docs and hardening | Not started |
 
