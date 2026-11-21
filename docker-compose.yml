@@ -59,7 +59,7 @@ services:
   readsb:
     profiles:
       - sdr
-    image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder@sha256:ed8a1395ad666d792d23e5306e468d12e91ff7b5a2c435fe8ff1868bbb7e3be5
+    image: ghcr.io/sdr-enthusiasts/docker-adsb-ultrafeeder@sha256:bbe4d62d7795065eea12dc7d4c99a87bc847b17799871d767eab279c66554c1f
     environment:
       TZ: UTC
       READSB_DEVICE_TYPE: rtlsdr
